@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Response ROI Calculator — Plan.Grow.Do.</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple:      #43165c;
+      --purple-mid:  #5a1f7a;
+      --purple-light:#f4f0f7;
+      --yellow:      #fbba00;
+      --yellow-light:#fff8e1;
+      --green:       #76b82a;
+      --green-light: #f0f8e8;
+      --blue:        #009fe3;
+      --blue-light:  #e8f5fb;
+      --gray-50:     #fafafa;
+      --gray-100:    #f4f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-400:    #9ca3af;
+      --gray-500:    #6b7280;
+      --gray-700:    #374151;
+      --gray-900:    #111827;
+      --white:       #ffffff;
+      --shadow-sm:   0 1px 3px rgba(67,22,92,.08), 0 1px 2px rgba(67,22,92,.04);
+      --shadow-md:   0 4px 16px rgba(67,22,92,.10), 0 2px 6px rgba(67,22,92,.06);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #ede8f2;
+      color: var(--gray-900);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+    .header {
+      background: var(--purple);
+      color: var(--white);
+      padding: 2.25rem 1.5rem 2rem;
+    }
+    .header-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .logo-mark {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .logo-wordmark {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .logo-wordmark .plan  { color: var(--yellow); }
+    .logo-wordmark .grow  { color: var(--green); }
+    .logo-wordmark .do    { color: var(--blue); }
+    .logo-wordmark .dot   { color: var(--white); }
+    .logo-sub {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+    }
+    .header-divider {
+      width: 1px;
+      height: 48px;
+      background: rgba(255,255,255,0.2);
+      flex-shrink: 0;
+    }
+    .header-text { flex: 1; min-width: 200px; }
+    .header-text h1 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+    .header-text p {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.75);
+    }
+
+    /* ── MAIN GRID ──────────────────────────────────────── */
+    .main {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 1.75rem 1.25rem 1rem;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .main { grid-template-columns: 1fr; }
+    }
+
+    /* ── CARD ───────────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 1.75rem;
+      box-shadow: var(--shadow-md);
+    }
+    .card-title {
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--purple);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--purple-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-title::before {
+      content: '';
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      background: var(--purple);
+      flex-shrink: 0;
+    }
+
+    /* ── SCENARIO TOGGLE ────────────────────────────────── */
+    .scenario-section { margin-bottom: 1.75rem; }
+    .scenario-section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .scenario-toggle {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--gray-100);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .scenario-btn {
+      padding: 0.55rem 0.25rem;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      background: transparent;
+      color: var(--gray-500);
+      text-align: center;
+    }
+    .scenario-btn.active {
+      background: var(--yellow);
+      color: var(--purple);
+      box-shadow: 0 2px 8px rgba(251,186,0,.35);
+    }
+    .scenario-btn:hover:not(.active) {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    /* ── SLIDER GROUP ───────────────────────────────────── */
+    .slider-group { margin-bottom: 1.4rem; }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.45rem;
+      gap: 0.5rem;
+    }
+    .slider-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      flex: 1;
+    }
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .input-affix {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--purple);
+      line-height: 1;
+    }
+    .slider-value-input {
+      width: 72px;
+      text-align: right;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 7px;
+      padding: 0.22rem 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--purple);
+      background: var(--gray-50);
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .slider-value-input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0,159,227,.12);
+    }
+    /* Remove number input arrows */
+    .slider-value-input::-webkit-inner-spin-button,
+    .slider-value-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .slider-value-input { -moz-appearance: textfield; }
+
+    .slider-sublabel {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--blue);
+      margin-bottom: 0.45rem;
+      display: inline-block;
+      background: var(--blue-light);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    /* Range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--gray-200);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--blue);
+      cursor: pointer;
+      border: 3px solid var(--white);
+      box-shadow: 0 2px 8px rgba(0,159,227,.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 3px 12px rgba(0,159,227,.55);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--blue);
+      cursor: pointer;
+      border: 3px solid var(--white);
+      box-shadow: 0 2px 8px rgba(0,159,227,.4);
+    }
+
+    /* Response comparison badges */
+    .response-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-top: 0.65rem;
+    }
+    .response-badge {
+      background: var(--gray-100);
+      border-radius: 8px;
+      padding: 0.5rem 0.6rem;
+      text-align: center;
+      border: 1px solid var(--gray-200);
+    }
+    .response-badge.improved {
+      background: var(--green-light);
+      border-color: rgba(118,184,42,.25);
+    }
+    .badge-label {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 3px;
+    }
+    .badge-value {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--purple);
+    }
+    .response-badge.improved .badge-value { color: var(--green); }
+
+    /* ── OUTPUT SECTION ─────────────────────────────────── */
+    .outputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.1rem;
+    }
+    @media (max-width: 480px) {
+      .outputs-grid { grid-template-columns: 1fr; }
+    }
+    .output-card {
+      background: var(--gray-50);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      border-left: 3.5px solid var(--gray-200);
+    }
+    .output-card.green  { border-left-color: var(--green);  background: var(--green-light); }
+    .output-card.blue   { border-left-color: var(--blue);   background: var(--blue-light); }
+    .output-card.purple { border-left-color: var(--purple); background: var(--purple-light); }
+    .output-card.yellow { border-left-color: var(--yellow); background: var(--yellow-light); }
+    .output-card.full   { grid-column: 1 / -1; }
+
+    .output-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gray-500);
+      margin-bottom: 0.3rem;
+    }
+    .output-value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--purple);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .output-card.green  .output-value { color: var(--green); }
+    .output-card.blue   .output-value { color: var(--blue); }
+    .output-card.yellow .output-value { color: #c49200; }
+    .output-sub {
+      font-size: 0.7rem;
+      color: var(--gray-400);
+      margin-top: 0.2rem;
+      font-weight: 500;
+    }
+
+    /* ── DOWNLOAD BUTTON ────────────────────────────────── */
+    .download-btn {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: var(--purple);
+      color: var(--white);
+      border: none;
+      border-radius: 9px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+      box-shadow: 0 4px 14px rgba(67,22,92,.25);
+      margin-top: 0.25rem;
+    }
+    .download-btn:hover  { background: var(--purple-mid); box-shadow: 0 6px 20px rgba(67,22,92,.35); }
+    .download-btn:active { transform: scale(0.98); }
+
+    /* ── FOOTER ─────────────────────────────────────────── */
+    .footer {
+      max-width: 1160px;
+      margin: 0 auto 2.5rem;
+      padding: 0 1.25rem;
+    }
+    .footer-note {
+      font-size: 0.75rem;
+      color: var(--gray-500);
+      text-align: center;
+      padding: 1rem 1.5rem;
+      background: var(--white);
+      border-radius: 10px;
+      line-height: 1.6;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── ANIMATION ──────────────────────────────────────── */
+    @keyframes fadeNum { 0%,100%{opacity:1} 40%{opacity:.45} }
+    .flash { animation: fadeNum 0.32s ease; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo-mark">
+      <div class="logo-wordmark">
+        <span class="plan">PLAN</span><span class="dot">.</span><span class="grow">GROW</span><span class="dot">.</span><span class="do">DO</span><span class="dot">.</span>
+      </div>
+      <div class="logo-sub">The B2B Sales Agency</div>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-text">
+      <h1>Response ROI Calculator</h1>
+      <p>Estimate how improved response speed could impact conversion and revenue.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: INPUTS -->
+  <div class="card">
+    <div class="card-title">Your current position</div>
+
+    <!-- Scenario -->
+    <div class="scenario-section">
+      <span class="scenario-section-label">Scenario</span>
+      <div class="scenario-toggle">
+        <button class="scenario-btn" data-scenario="conservative">Conservative</button>
+        <button class="scenario-btn active" data-scenario="expected">Expected</button>
+        <button class="scenario-btn" data-scenario="ambitious">Ambitious</button>
+      </div>
+    </div>
+
+    <!-- 1 · Monthly website visits -->
+    <div class="slider-group">
+      <div class="slider-header">
+        <label class="slider-label" for="slider-visits">Monthly website visits</label>
+        <div class="input-wrap">
+          <input type="number" class="slider-value-input" id="input-visits" value="2000" min="0" max="50000" step="100">
+        </div>
+      </div>
+      <input type="range" id="slider-visits" min="0" max="50000" step="100" value="2000">
+    </div>
+
+    <!-- 2 · Enquiry rate -->
+    <div class="slider-group">
+      <div class="slider-header">
+        <label class="slider-label" for="slider-enquiry">Website enquiry rate</label>
+        <div class="input-wrap">
+          <input type="number" class="slider-value-input" id="input-enquiry" value="2.5" min="0" max="20" step="0.1">
+          <span class="input-affix">%</span>
+        </div>
+      </div>
+      <input type="range" id="slider-enquiry" min="0" max="20" step="0.1" value="2.5">
+    </div>
+
+    <!-- 3 · Current response time -->
+    <div class="slider-group">
+      <div class="slider-header">
+        <label class="slider-label" for="slider-response">Current response time</label>
+        <div class="input-wrap">
+          <input type="number" class="slider-value-input" id="input-response" value="48" min="1" max="72" step="1">
+          <span class="input-affix">hrs</span>
+        </div>
+      </div>
+      <span class="slider-sublabel" id="response-label">24 to 48 hours</span>
+      <input type="range" id="slider-response" min="1" max="72" step="1" value="48">
+      <div class="response-comparison">
+        <div class="response-badge">
+          <span class="badge-label">Current</span>
+          <span class="badge-value" id="badge-current">48 hrs</span>
+        </div>
+        <div class="response-badge improved">
+          <span class="badge-label">After improvement</span>
+          <span class="badge-value" id="badge-improved">24 hrs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 · Response improvement -->
+    <div class="slider-group">
+      <div class="slider-header">
+        <label class="slider-label" for="slider-improvement">Response time improvement</label>
+        <div class="input-wrap">
+          <input type="number" class="slider-value-input" id="input-improvement" value="50" min="0" max="90" step="5">
+          <span class="input-affix">%</span>
+        </div>
+      </div>
+      <input type="range" id="slider-improvement" min="0" max="90" step="5" value="50">
+    </div>
+
+    <!-- 5 · Conversion rate -->
+    <div class="slider-group">
+      <div class="slider-header">
+        <label class="slider-label" for="slider-conversion">Conversion rate</label>
+        <div class="input-wrap">
+          <input type="number" class="slider-value-input" id="input-conversion" value="20" min="0" max="100" step="1">
+          <span class="input-affix">%</span>
+        </div>
+      </div>
+      <input type="range" id="slider-conversion" min="0" max="100" step="1" value="20">
+    </div>
+
+    <!-- 6 · Average order value -->
+    <div class="slider-group">
+      <div class="slider-header">
+        <label class="slider-label" for="slider-aov">Average order value</label>
+        <div class="input-wrap">
+          <span class="input-affix">£</span>
+          <input type="number" class="slider-value-input" id="input-aov" value="1500" min="100" max="100000" step="100">
+        </div>
+      </div>
+      <input type="range" id="slider-aov" min="100" max="100000" step="100" value="1500">
+    </div>
+  </div>
+
+  <!-- RIGHT: OUTPUTS -->
+  <div>
+    <div class="card">
+      <div class="card-title">Estimated commercial impact</div>
+
+      <div class="outputs-grid">
+
+        <div class="output-card">
+          <div class="output-label">Monthly enquiries</div>
+          <div class="output-value" id="out-enquiries">50</div>
+          <div class="output-sub">at current visit &amp; enquiry rate</div>
+        </div>
+
+        <div class="output-card">
+          <div class="output-label">Current monthly revenue</div>
+          <div class="output-value" id="out-current-rev">£15,000</div>
+          <div class="output-sub">before response improvement</div>
+        </div>
+
+        <div class="output-card green">
+          <div class="output-label">Improved monthly revenue</div>
+          <div class="output-value" id="out-improved-rev">£18,000</div>
+          <div class="output-sub">after faster response</div>
+        </div>
+
+        <div class="output-card green">
+          <div class="output-label">Additional monthly revenue</div>
+          <div class="output-value" id="out-monthly-uplift">£3,000</div>
+          <div class="output-sub">estimated monthly increase</div>
+        </div>
+
+        <div class="output-card blue">
+          <div class="output-label">6-month revenue uplift</div>
+          <div class="output-value" id="out-6m-uplift">£18,000</div>
+          <div class="output-sub">cumulative estimate</div>
+        </div>
+
+        <div class="output-card blue">
+          <div class="output-label">12-month revenue uplift</div>
+          <div class="output-value" id="out-12m-uplift">£36,000</div>
+          <div class="output-sub">cumulative estimate</div>
+        </div>
+
+        <div class="output-card purple">
+          <div class="output-label">6-month ROI after cost</div>
+          <div class="output-value" id="out-6m-roi">+110%</div>
+          <div class="output-sub">vs. system investment</div>
+        </div>
+
+        <div class="output-card purple">
+          <div class="output-label">12-month ROI after cost</div>
+          <div class="output-value" id="out-12m-roi">+185%</div>
+          <div class="output-sub">vs. system investment</div>
+        </div>
+
+        <div class="output-card yellow full">
+          <div class="output-label">Estimated payback period</div>
+          <div class="output-value" id="out-payback">2.3 months</div>
+          <div class="output-sub">time to recover £5,000 setup cost at net return above £500/month fee</div>
+        </div>
+
+      </div>
+
+      <button class="download-btn" id="download-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download PDF Report
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-note">
+    This estimate is based on your inputs and a response-speed weighting model. ROI is calculated using revenue uplift against system cost and is intended as a directional estimate.
+  </div>
+</div>
+
+<script>
+  // ── STATE ─────────────────────────────────────────────────────
+  const state = {
+    websiteVisits:       2000,
+    enquiryRate:         2.5,
+    currentResponseTime: 48,
+    responseImprovement: 50,
+    conversionRate:      20,
+    averageOrderValue:   1500,
+    scenario:            'expected'
+  };
+
+  const SETUP_COST   = 5000;
+  const MONTHLY_COST = 500;
+
+  // ── HELPERS ───────────────────────────────────────────────────
+  function responseLabel(h) {
+    if (h <= 1)  return 'Within 1 hour';
+    if (h <= 3)  return 'Within 3 hours';
+    if (h <= 8)  return 'Same working day';
+    if (h <= 24) return 'Within 24 hours';
+    if (h <= 48) return '24 to 48 hours';
+    return 'Over 48 hours';
+  }
+
+  function fmtHrs(h) {
+    if (h < 1)    return '< 1 hr';
+    if (h === 1)  return '1 hr';
+    const v = Math.round(h * 10) / 10;
+    return v % 1 === 0 ? v + ' hrs' : v + ' hrs';
+  }
+
+  function fmtCurrency(v) {
+    const abs = Math.abs(Math.round(v));
+    const str = '£' + abs.toLocaleString('en-GB');
+    return v < 0 ? '-' + str : str;
+  }
+
+  function fmtROI(v) {
+    return (v >= 0 ? '+' : '') + Math.round(v) + '%';
+  }
+
+  function fmtPayback(m) {
+    if (m === null || !isFinite(m)) return 'N/A';
+    return m.toFixed(1) + ' months';
+  }
+
+  // ── CALCULATION ───────────────────────────────────────────────
+  function getBaseMultiplier(cur, nw) {
+    let u = 0;
+    // Threshold bonuses for crossing key response-time bands
+    if (cur > 48 && nw <= 48) u += 0.05;
+    if (cur > 24 && nw <= 24) u += 0.08;
+    if (cur > 8  && nw <= 8)  u += 0.10;
+    if (cur > 3  && nw <= 3)  u += 0.12;
+    if (cur > 1  && nw <= 1)  u += 0.08;
+    // Proportional baseline: any speed improvement produces some uplift,
+    // preventing dead zones between thresholds (e.g. 24hrs → 12hrs)
+    const pctImproved = Math.max(0, (cur - nw) / cur);
+    u += pctImproved * 0.15;
+    return 1 + u;
+  }
+
+  function getScenarioMultiplier(base, scenario) {
+    const uplift = base - 1;
+    const factor = scenario === 'conservative' ? 0.7 : scenario === 'ambitious' ? 1.3 : 1.0;
+    return Math.min(1 + uplift * factor, 1.5);
+  }
+
+  function calculate() {
+    const { websiteVisits, enquiryRate, currentResponseTime, responseImprovement, conversionRate, averageOrderValue, scenario } = state;
+
+    const monthlyEnquiries  = websiteVisits * (enquiryRate / 100);
+    const monthlyOrders     = monthlyEnquiries * (conversionRate / 100);
+    const monthlyRevenue    = monthlyOrders * averageOrderValue;
+
+    const newResponseTime   = currentResponseTime * (1 - responseImprovement / 100);
+    const baseM             = getBaseMultiplier(currentResponseTime, newResponseTime);
+    const adjM              = getScenarioMultiplier(baseM, scenario);
+
+    const improvedCR        = Math.min(conversionRate * adjM, 100);
+    const improvedOrders    = monthlyEnquiries * (improvedCR / 100);
+    const improvedRevenue   = improvedOrders * averageOrderValue;
+    const monthlyUplift     = improvedRevenue - monthlyRevenue;
+
+    const uplift6m          = monthlyUplift * 6;
+    const uplift12m         = monthlyUplift * 12;
+    const cost6m            = SETUP_COST + MONTHLY_COST * 6;
+    const cost12m           = SETUP_COST + MONTHLY_COST * 12;
+    const roi6m             = ((uplift6m  - cost6m)  / cost6m)  * 100;
+    const roi12m            = ((uplift12m - cost12m) / cost12m) * 100;
+    const netMonthly        = monthlyUplift - MONTHLY_COST;
+    const payback           = netMonthly > 0 ? SETUP_COST / netMonthly : null;
+
+    return { monthlyEnquiries, monthlyRevenue, improvedRevenue, monthlyUplift, uplift6m, uplift12m, roi6m, roi12m, payback, newResponseTime, improvedCR };
+  }
+
+  // ── DOM UPDATES ───────────────────────────────────────────────
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el.textContent === val) return;
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+    el.textContent = val;
+  }
+
+  function updateSliderFill(slider) {
+    const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+    slider.style.background = `linear-gradient(to right, var(--blue) ${pct}%, var(--gray-200) ${pct}%)`;
+  }
+
+  function updateOutputs() {
+    const r = calculate();
+    const { currentResponseTime } = state;
+
+    document.getElementById('response-label').textContent = responseLabel(currentResponseTime);
+    document.getElementById('badge-current').textContent  = fmtHrs(currentResponseTime);
+    document.getElementById('badge-improved').textContent = fmtHrs(r.newResponseTime);
+
+    setText('out-enquiries',     Math.round(r.monthlyEnquiries).toLocaleString('en-GB'));
+    setText('out-current-rev',   fmtCurrency(r.monthlyRevenue));
+    setText('out-improved-rev',  fmtCurrency(r.improvedRevenue));
+    setText('out-monthly-uplift',fmtCurrency(r.monthlyUplift));
+    setText('out-6m-uplift',     fmtCurrency(r.uplift6m));
+    setText('out-12m-uplift',    fmtCurrency(r.uplift12m));
+    setText('out-6m-roi',        fmtROI(r.roi6m));
+    setText('out-12m-roi',       fmtROI(r.roi12m));
+    setText('out-payback',       fmtPayback(r.payback));
+  }
+
+  // ── SLIDER WIRING ─────────────────────────────────────────────
+  function wireSlider(sliderId, inputId, stateKey) {
+    const slider = document.getElementById(sliderId);
+    const input  = document.getElementById(inputId);
+
+    updateSliderFill(slider);
+
+    slider.addEventListener('input', () => {
+      const v = parseFloat(slider.value);
+      state[stateKey] = v;
+      input.value = v;
+      updateSliderFill(slider);
+      updateOutputs();
+    });
+
+    input.addEventListener('change', () => {
+      let v = parseFloat(input.value) || 0;
+      v = Math.max(parseFloat(slider.min), Math.min(parseFloat(slider.max), v));
+      const step = parseFloat(slider.step);
+      v = Math.round(v / step) * step;
+      // Fix float precision for decimal steps
+      v = parseFloat(v.toFixed(10));
+      state[stateKey] = v;
+      input.value = v;
+      slider.value = v;
+      updateSliderFill(slider);
+      updateOutputs();
+    });
+
+    input.addEventListener('focus', () => input.select());
+  }
+
+  // ── PDF GENERATION ────────────────────────────────────────────
+  function generatePDF() {
+    if (!window.jspdf) { alert('PDF library not loaded. Please check your internet connection.'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc  = new jsPDF({ unit: 'mm', format: 'a4' });
+    const r    = calculate();
+    const W    = 210, H = 297, M = 18, CW = W - M * 2;
+
+    // Colours
+    const COL = {
+      purple: [67, 22, 92],
+      yellow: [251, 186, 0],
+      green:  [118, 184, 42],
+      blue:   [0, 159, 227],
+      white:  [255, 255, 255],
+      lgray:  [245, 245, 248],
+      mgray:  [100, 110, 120],
+      dgray:  [40, 45, 55],
+    };
+
+    // ── Header bar ──
+    doc.setFillColor(...COL.purple);
+    doc.rect(0, 0, W, 38, 'F');
+
+    // Logo text
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(...COL.yellow); doc.text('PLAN.', M, 13);
+    const planW = doc.getTextWidth('PLAN.');
+    doc.setTextColor(...COL.green);  doc.text('GROW.', M + planW, 13);
+    const growW = doc.getTextWidth('GROW.');
+    doc.setTextColor(...COL.blue);   doc.text('DO.', M + planW + growW, 13);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(200, 180, 220);
+    doc.text('THE B2B SALES AGENCY', M, 18);
+
+    // Report title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(...COL.white);
+    doc.text('Response ROI Report', M, 28);
+
+    // Timestamp
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(200, 185, 215);
+    const stamp = 'Generated ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.text(stamp, W - M, 28, { align: 'right' });
+
+    // Scenario badge
+    const scenLabel = state.scenario.charAt(0).toUpperCase() + state.scenario.slice(1);
+    doc.setFillColor(...COL.yellow);
+    doc.roundedRect(W - M - 28, 31, 28, 6, 1, 1, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...COL.purple);
+    doc.text(scenLabel + ' scenario', W - M - 14, 35.2, { align: 'center' });
+
+    let y = 48;
+
+    // ── Section heading helper ──
+    function sectionHead(label, col) {
+      doc.setFillColor(...col);
+      doc.rect(M, y, CW, 7, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...COL.white);
+      doc.text(label, M + 3, y + 4.8);
+      y += 11;
+    }
+
+    // ── Row helper ──
+    function row(label, value, valueCol, shade) {
+      if (shade) {
+        doc.setFillColor(...COL.lgray);
+        doc.rect(M, y - 3, CW, 7, 'F');
+      }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...COL.mgray);
+      doc.text(label, M + 3, y + 1);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...valueCol);
+      doc.text(value, M + CW - 3, y + 1, { align: 'right' });
+      y += 8;
+    }
+
+    // ── Inputs ──
+    sectionHead('INPUT SUMMARY', COL.purple);
+
+    const inputRows = [
+      ['Monthly website visits',         state.websiteVisits.toLocaleString('en-GB')],
+      ['Website enquiry rate',            state.enquiryRate + '%'],
+      ['Current response time',           state.currentResponseTime + ' hrs — ' + responseLabel(state.currentResponseTime)],
+      ['Response time improvement',       state.responseImprovement + '%'],
+      ['Improved response time',          fmtHrs(r.newResponseTime) + ' — ' + responseLabel(r.newResponseTime)],
+      ['Conversion rate (current)',       state.conversionRate + '%'],
+      ['Average order value',             '£' + state.averageOrderValue.toLocaleString('en-GB')],
+    ];
+    inputRows.forEach(([l, v], i) => row(l, v, COL.dgray, i % 2 === 0));
+
+    y += 4;
+
+    // ── Results ──
+    sectionHead('ESTIMATED RESULTS', COL.purple);
+
+    const resultRows = [
+      ['Monthly enquiries',              Math.round(r.monthlyEnquiries).toLocaleString('en-GB'),  COL.dgray],
+      ['Current monthly revenue',        fmtCurrency(r.monthlyRevenue),   COL.dgray],
+      ['Improved monthly revenue',       fmtCurrency(r.improvedRevenue),  COL.green],
+      ['Additional monthly revenue',     fmtCurrency(r.monthlyUplift),    COL.green],
+      ['6-month revenue uplift',         fmtCurrency(r.uplift6m),         COL.blue],
+      ['12-month revenue uplift',        fmtCurrency(r.uplift12m),        COL.blue],
+      ['6-month ROI after system cost',  fmtROI(r.roi6m),                 COL.purple],
+      ['12-month ROI after system cost', fmtROI(r.roi12m),                COL.purple],
+      ['Estimated payback period',       fmtPayback(r.payback),           r.payback ? [180, 130, 0] : COL.mgray],
+    ];
+    resultRows.forEach(([l, v, c], i) => row(l, v, c, i % 2 === 0));
+
+    y += 4;
+
+    // ── Cost basis ──
+    doc.setFillColor(240, 240, 245);
+    doc.rect(M, y, CW, 8, 'F');
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...COL.mgray);
+    doc.text('System cost basis: £5,000 setup + £500/month. ROI calculated against total system cost.', M + 3, y + 5);
+    y += 14;
+
+    // ── Disclaimer ──
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...COL.mgray);
+    const disclaimer = doc.splitTextToSize(
+      'This estimate is based on your inputs and a response-speed weighting model. ROI is calculated using revenue uplift against system cost and is intended as a directional estimate.',
+      CW - 4
+    );
+    doc.text(disclaimer, M + 2, y);
+
+    // ── Footer bar ──
+    doc.setFillColor(...COL.purple);
+    doc.rect(0, H - 11, W, 11, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...COL.white);
+    doc.text('Plan.Grow.Do. — The B2B Sales Agency', M, H - 4.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(180, 160, 200);
+    doc.text('plangrowdo.co.uk', W - M, H - 4.5, { align: 'right' });
+
+    doc.save('PGD-Response-ROI-Report.pdf');
+  }
+
+  // ── INIT ──────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    wireSlider('slider-visits',      'input-visits',      'websiteVisits');
+    wireSlider('slider-enquiry',     'input-enquiry',     'enquiryRate');
+    wireSlider('slider-response',    'input-response',    'currentResponseTime');
+    wireSlider('slider-improvement', 'input-improvement', 'responseImprovement');
+    wireSlider('slider-conversion',  'input-conversion',  'conversionRate');
+    wireSlider('slider-aov',         'input-aov',         'averageOrderValue');
+
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.scenario = btn.dataset.scenario;
+        updateOutputs();
+      });
+    });
+
+    document.getElementById('download-btn').addEventListener('click', generatePDF);
+
+    updateOutputs();
+  });
+</script>
+</body>
+</html>
