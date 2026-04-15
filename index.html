@@ -191,6 +191,80 @@
       display: none;
     }
 
+    /* ── CURRENCY PICKER ────────────────────────────────── */
+    .currency-section {
+      margin-bottom: 1.5rem;
+      padding: 1rem 1.1rem;
+      background: var(--yellow-light);
+      border-radius: 10px;
+      border: 1.5px solid rgba(251,186,0,.25);
+    }
+    .currency-label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.6rem;
+    }
+    .currency-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .currency-btn {
+      padding: 0.4rem 0.85rem;
+      border: 2px solid var(--gray-200);
+      border-radius: 7px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--white);
+      color: var(--gray-700);
+      transition: all 0.15s ease;
+      line-height: 1;
+    }
+    .currency-btn.active {
+      border-color: var(--yellow);
+      background: var(--yellow);
+      color: var(--purple);
+      box-shadow: 0 2px 8px rgba(251,186,0,.35);
+    }
+    .currency-btn:hover:not(.active) {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+    .currency-other-wrap {
+      flex: 1;
+      min-width: 140px;
+    }
+    .currency-select {
+      width: 100%;
+      padding: 0.4rem 0.6rem;
+      border: 2px solid var(--gray-200);
+      border-radius: 7px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      background: var(--white);
+      cursor: pointer;
+      transition: border-color 0.15s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 28px;
+    }
+    .currency-select:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+    .currency-select.active-other {
+      border-color: var(--yellow);
+    }
+
     /* ── SCENARIO TOGGLE ────────────────────────────────── */
     .scenario-section { margin-bottom: 1.75rem; }
     .scenario-section-label {
@@ -478,6 +552,48 @@
   <div class="card">
     <div class="card-title">Your current position</div>
 
+    <!-- Currency picker -->
+    <div class="currency-section">
+      <span class="currency-label">Currency</span>
+      <div class="currency-row">
+        <button class="currency-btn active" data-symbol="£" data-code="GBP">£ GBP</button>
+        <button class="currency-btn" data-symbol="$" data-code="USD">$ USD</button>
+        <button class="currency-btn" data-symbol="€" data-code="EUR">€ EUR</button>
+        <div class="currency-other-wrap">
+          <select class="currency-select" id="currency-other">
+            <option value="" data-symbol="">Other currency…</option>
+            <option value="AED" data-symbol="د.إ">د.إ AED — UAE Dirham</option>
+            <option value="AUD" data-symbol="A$">A$ AUD — Australian Dollar</option>
+            <option value="BRL" data-symbol="R$">R$ BRL — Brazilian Real</option>
+            <option value="CAD" data-symbol="C$">C$ CAD — Canadian Dollar</option>
+            <option value="CHF" data-symbol="Fr">Fr CHF — Swiss Franc</option>
+            <option value="CNY" data-symbol="¥">¥ CNY — Chinese Yuan</option>
+            <option value="CZK" data-symbol="Kč">Kč CZK — Czech Koruna</option>
+            <option value="DKK" data-symbol="kr">kr DKK — Danish Krone</option>
+            <option value="HKD" data-symbol="HK$">HK$ HKD — Hong Kong Dollar</option>
+            <option value="HUF" data-symbol="Ft">Ft HUF — Hungarian Forint</option>
+            <option value="IDR" data-symbol="Rp">Rp IDR — Indonesian Rupiah</option>
+            <option value="INR" data-symbol="₹">₹ INR — Indian Rupee</option>
+            <option value="JPY" data-symbol="¥">¥ JPY — Japanese Yen</option>
+            <option value="KRW" data-symbol="₩">₩ KRW — South Korean Won</option>
+            <option value="MXN" data-symbol="MX$">MX$ MXN — Mexican Peso</option>
+            <option value="MYR" data-symbol="RM">RM MYR — Malaysian Ringgit</option>
+            <option value="NOK" data-symbol="kr">kr NOK — Norwegian Krone</option>
+            <option value="NZD" data-symbol="NZ$">NZ$ NZD — New Zealand Dollar</option>
+            <option value="PHP" data-symbol="₱">₱ PHP — Philippine Peso</option>
+            <option value="PLN" data-symbol="zł">zł PLN — Polish Złoty</option>
+            <option value="SAR" data-symbol="﷼">﷼ SAR — Saudi Riyal</option>
+            <option value="SEK" data-symbol="kr">kr SEK — Swedish Krona</option>
+            <option value="SGD" data-symbol="S$">S$ SGD — Singapore Dollar</option>
+            <option value="THB" data-symbol="฿">฿ THB — Thai Baht</option>
+            <option value="TRY" data-symbol="₺">₺ TRY — Turkish Lira</option>
+            <option value="TWD" data-symbol="NT$">NT$ TWD — Taiwan Dollar</option>
+            <option value="ZAR" data-symbol="R">R ZAR — South African Rand</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Scenario -->
     <div class="scenario-section">
       <span class="scenario-section-label">Scenario</span>
@@ -585,7 +701,7 @@
       <div class="slider-header">
         <label class="slider-label" for="slider-aov">Average order value</label>
         <div class="input-wrap">
-          <span class="input-affix">£</span>
+          <span class="input-affix" id="aov-prefix">£</span>
           <input type="number" class="slider-value-input" id="input-aov" value="1500" min="100" max="100000" step="100">
         </div>
       </div>
@@ -680,6 +796,7 @@
   // ── STATE ─────────────────────────────────────────────────────
   const state = {
     inputMode:           'visits',   // 'visits' | 'direct'
+    currency:            { symbol: '£', code: 'GBP' },
     websiteVisits:       2000,
     enquiryRate:         2.5,
     directEnquiries:     50,
@@ -711,8 +828,9 @@
   }
 
   function fmtCurrency(v) {
+    const sym = state.currency.symbol;
     const abs = Math.abs(Math.round(v));
-    const str = '£' + abs.toLocaleString('en-GB');
+    const str = sym + abs.toLocaleString('en-GB');
     return v < 0 ? '-' + str : str;
   }
 
@@ -947,7 +1065,7 @@
       ['Response time improvement',       state.responseImprovement + '%'],
       ['Improved response time',          fmtHrs(r.newResponseTime) + ' — ' + responseLabel(r.newResponseTime)],
       ['Conversion rate (current)',       state.conversionRate + '%'],
-      ['Average order value',             '£' + state.averageOrderValue.toLocaleString('en-GB')],
+      ['Average order value',             state.currency.symbol + state.averageOrderValue.toLocaleString('en-GB') + ' (' + state.currency.code + ')'],
     ];
     inputRows.forEach(([l, v], i) => row(l, v, COL.dgray, i % 2 === 0));
 
@@ -977,7 +1095,7 @@
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(7.5);
     doc.setTextColor(...COL.mgray);
-    doc.text('System cost basis: £5,000 setup + £500/month. ROI calculated against total system cost.', M + 3, y + 5);
+    doc.text('System cost basis: ' + state.currency.symbol + '5,000 setup + ' + state.currency.symbol + '500/month. ROI calculated against total system cost.', M + 3, y + 5);
     y += 14;
 
     // ── Disclaimer ──
@@ -1013,6 +1131,31 @@
     wireSlider('slider-improvement', 'input-improvement', 'responseImprovement');
     wireSlider('slider-conversion',  'input-conversion',  'conversionRate');
     wireSlider('slider-aov',         'input-aov',         'averageOrderValue');
+
+    // Currency picker
+    function setCurrency(symbol, code) {
+      state.currency = { symbol, code };
+      document.getElementById('aov-prefix').textContent = symbol;
+      updateOutputs();
+    }
+
+    document.querySelectorAll('.currency-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('currency-other').value = '';
+        document.getElementById('currency-other').classList.remove('active-other');
+        setCurrency(btn.dataset.symbol, btn.dataset.code);
+      });
+    });
+
+    document.getElementById('currency-other').addEventListener('change', function () {
+      const opt = this.options[this.selectedIndex];
+      if (!opt.value) return;
+      document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active-other');
+      setCurrency(opt.dataset.symbol, opt.value);
+    });
 
     // Input mode toggle
     document.querySelectorAll('.mode-btn').forEach(btn => {
