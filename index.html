@@ -961,9 +961,9 @@
 
       <!-- Panel B: Revenue Suppression -->
       <div class="diag-panel">
-        <div class="output-label">Estimated monthly revenue suppression</div>
-        <div class="opportunity-amount" id="diag-opportunity-cost">£0</div>
-        <div class="output-sub" id="diag-suppression-pct" style="margin-bottom:0.5rem;font-size:0.72rem;font-weight:600;color:var(--gray-500)"></div>
+        <div class="output-label">Conversion headroom vs top-quartile response speed</div>
+        <div class="opportunity-amount" id="diag-opportunity-cost">0%</div>
+        <div class="output-sub" id="diag-suppression-pct" style="margin:0.15rem 0 0.55rem;font-size:0.78rem;font-weight:700;color:var(--gray-700)"></div>
         <div class="opportunity-narrative" id="diag-opportunity-narrative"></div>
       </div>
 
@@ -1163,12 +1163,11 @@
   function getOpportunityNarrative(cur, nw, uplift, sym) {
     if (uplift <= 0)
       return 'Your response speed is at or near top-quartile performance. The model shows minimal remaining conversion suppression vs the 3-hour benchmark.';
-    const annual = sym + Math.round(uplift * 12).toLocaleString('en-GB');
     const hasImprovement = Math.abs(cur - nw) > 0.5;
     if (hasImprovement) {
-      return `Even after improving from ${fmtHrs(cur)} to ${fmtHrs(nw)}, an estimated ${sym}${Math.round(uplift).toLocaleString('en-GB')}/month in conversion revenue remains uncaptured vs top-quartile (\u003c3 hr) performance — ${annual} annualised. This is the remaining commercial gap your chosen improvement has not yet closed.`;
+      return `Even at your improved ${fmtHrs(nw)} response speed, the model shows a remaining conversion gap vs top-quartile (\u003c3 hr) performance. At your current pipeline size, that gap represents approximately ${sym}${Math.round(uplift).toLocaleString('en-GB')}/month — ${sym}${Math.round(uplift * 12).toLocaleString('en-GB')} annualised. A larger pipeline means a larger absolute opportunity; the percentage gap is driven solely by response speed.`;
     }
-    return `At your current ${responseLabel(cur).toLowerCase()} response speed, an estimated ${sym}${Math.round(uplift).toLocaleString('en-GB')}/month in conversion revenue is being suppressed vs top-quartile (\u003c3 hr) performance — ${annual} annualised. This is not future upside; it is revenue your pipeline is generating that your current response speed is failing to capture.`;
+    return `Your current ${responseLabel(cur).toLowerCase()} response speed leaves a measurable conversion gap vs top-quartile (\u003c3 hr) performance. At your pipeline size, that equates to approximately ${sym}${Math.round(uplift).toLocaleString('en-GB')}/month — ${sym}${Math.round(uplift * 12).toLocaleString('en-GB')} annualised. Faster competitors responding to the same enquiries are more likely to capture this revenue. The percentage above is independent of pipeline size — it reflects response speed alone.`;
   }
 
   function getCRNote(h, deltaCR) {
@@ -1278,13 +1277,15 @@
     // Percentage suppression is CR-neutral: stays proportionally constant as pipeline size changes
     const suppressionPct = tqRevenue > 0 ? Math.round((suppressionAmount / tqRevenue) * 100) : 0;
 
-    const costEl = document.getElementById('diag-opportunity-cost');
-    costEl.textContent = fmtCurrency(suppressionAmount);
-    // Red = suppression remains (money still on the table); green = at/near top-quartile (good)
-    costEl.classList.toggle('positive', suppressionAmount <= 0);
+    // Headline: % gap — CR-neutral. Only changes with response speed, never with CR or AOV.
+    // When a user raises their CR, this % stays constant → makes clear it is a speed problem, not a CR problem.
+    const pctEl = document.getElementById('diag-opportunity-cost');
+    pctEl.textContent = suppressionPct + '%';
+    pctEl.classList.toggle('positive', suppressionPct <= 5); // green when nearly closed
+    // Sub-label: absolute £ at their specific pipeline size (informational, not the headline signal)
     document.getElementById('diag-suppression-pct').textContent = suppressionAmount > 0
-      ? suppressionPct + '% of your top-quartile revenue potential still uncaptured'
-      : 'Fully capturing top-quartile revenue potential at this response speed';
+      ? 'of top-quartile potential uncaptured — ' + fmtCurrency(suppressionAmount) + '/month at your pipeline size'
+      : 'Top-quartile conversion potential fully captured at this response speed';
     document.getElementById('diag-opportunity-narrative').textContent =
       getOpportunityNarrative(cur, nw, suppressionAmount, sym);
 
