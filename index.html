@@ -961,8 +961,8 @@
 
       <!-- Panel B: Revenue Suppression -->
       <div class="diag-panel">
-        <div class="output-label">Revenue suppressed by current response speed vs top-quartile</div>
-        <div class="opportunity-amount" id="diag-opportunity-cost">£0</div>
+        <div class="output-label">Revenue opportunity from reaching top-quartile response speed</div>
+        <div class="opportunity-amount positive" id="diag-opportunity-cost">£0</div>
         <div class="output-sub" id="diag-suppression-pct" style="margin:0.2rem 0 0.55rem;font-size:0.78rem;font-weight:700;color:var(--green)"></div>
         <div class="opportunity-narrative" id="diag-opportunity-narrative"></div>
       </div>
@@ -1160,23 +1160,22 @@
     return { items, totalUplift, multiplier: 1 + totalUplift };
   }
 
-  function getOpportunityNarrative(cur, nw, suppressionTotal, captured, sym) {
-    if (suppressionTotal <= 0)
-      return 'Your current response speed is at or near top-quartile. The model shows no meaningful conversion suppression vs the 3-hour benchmark.';
-    const totalStr   = sym + Math.round(suppressionTotal).toLocaleString('en-GB');
-    const annualStr  = sym + Math.round(suppressionTotal * 12).toLocaleString('en-GB');
+  function getOpportunityNarrative(cur, nw, opportunityTotal, captured, sym) {
+    if (opportunityTotal <= 0)
+      return 'Your current response speed is at or near top-quartile. The model shows no meaningful remaining conversion opportunity from further speed improvement.';
+    const totalStr  = sym + Math.round(opportunityTotal).toLocaleString('en-GB');
+    const annualStr = sym + Math.round(opportunityTotal * 12).toLocaleString('en-GB');
     const hasImprovement = Math.abs(cur - nw) > 0.5;
     if (!hasImprovement) {
-      return `Responding ${responseLabel(cur).toLowerCase()} is suppressing an estimated ${totalStr}/month in conversion revenue vs top-quartile (\u003c3 hr) performance — ${annualStr} annualised. This is not future upside; it is revenue your enquiry pipeline is already generating that your current response speed is failing to capture. Use the improvement slider above to model how much of this you can recover.`;
+      return `At your current ${responseLabel(cur).toLowerCase()} response speed, the model estimates ${totalStr}/month in conversion revenue that top-quartile (\u003c3 hr) businesses would capture from the same pipeline — ${annualStr} annualised. A higher conversion rate means a larger pipeline, so the absolute opportunity scales with your business size. Use the improvement slider to model how much of this you can unlock.`;
     }
-    const capStr      = sym + Math.round(captured).toLocaleString('en-GB');
-    const remaining   = Math.max(0, suppressionTotal - captured);
-    const remStr      = sym + Math.round(remaining).toLocaleString('en-GB');
-    const remAnnual   = sym + Math.round(remaining * 12).toLocaleString('en-GB');
+    const capStr    = sym + Math.round(captured).toLocaleString('en-GB');
+    const remaining = Math.max(0, opportunityTotal - captured);
+    const remStr    = sym + Math.round(remaining).toLocaleString('en-GB');
     if (remaining <= 0) {
-      return `Your ${fmtHrs(nw)} improved response speed fully closes the top-quartile gap. At this speed, the model shows no remaining suppression — you are capturing the full conversion potential available from response speed improvement.`;
+      return `Your improved ${fmtHrs(nw)} response speed fully closes the top-quartile gap — the model shows no remaining conversion opportunity from further speed improvement at this level.`;
     }
-    return `Your current ${fmtHrs(cur)} response speed suppresses an estimated ${totalStr}/month vs top-quartile (\u003c3 hr) performance. Your chosen improvement to ${fmtHrs(nw)} recovers ${capStr} of this — but ${remStr}/month (${remAnnual}/year) remains uncaptured. Closing the full gap requires reaching top-quartile response speed.`;
+    return `The total response-speed opportunity at top-quartile (\u003c3 hr) performance is ${totalStr}/month. Your improvement to ${fmtHrs(nw)} unlocks ${capStr} of this — ${remStr}/month remains available if you close the full gap to top-quartile speed.`;
   }
 
   function getCRNote(h, deltaCR) {
@@ -1289,22 +1288,25 @@
     // suppressionAmount = total revenue suppressed by CURRENT speed vs top-quartile.
     // This is the diagnostic headline — the full cost of slow response at this pipeline size.
     // It is intentionally independent of the improvement slider: shows the total problem, not the partial fix.
+    // Panel B is framed as OPPORTUNITY (green), not cost (red).
+    // Higher CR means a bigger green number — correct: larger pipeline = more to gain from fast response.
     const costEl = document.getElementById('diag-opportunity-cost');
-    costEl.textContent = fmtCurrency(suppressionAmount);
-    costEl.classList.toggle('positive', suppressionAmount <= 0); // green only if already at top-quartile
+    costEl.textContent = suppressionAmount > 0 ? fmtCurrency(suppressionAmount) : fmtCurrency(0);
+    // Always green — this is an opportunity figure, not a penalty
+    costEl.classList.add('positive');
 
-    // Sub-label: how much of the suppression the user's chosen improvement recovers
     const capturedAmount = Math.min(Math.max(0, r.monthlyUplift), suppressionAmount);
     const capturedPct    = suppressionAmount > 0 ? Math.round((capturedAmount / suppressionAmount) * 100) : 100;
     const hasImprovement = Math.abs(cur - nw) > 0.5;
     const subEl = document.getElementById('diag-suppression-pct');
     if (suppressionAmount <= 0) {
-      subEl.textContent = 'Already at or near top-quartile — no suppression detected';
+      subEl.textContent = 'Already at or near top-quartile speed — full opportunity captured';
+      subEl.style.color = 'var(--green)';
     } else if (!hasImprovement) {
-      subEl.textContent = 'Move the response improvement slider above to see how much you can recover';
+      subEl.textContent = 'Use the response improvement slider above to see how much of this you can unlock';
       subEl.style.color = 'var(--gray-500)';
     } else {
-      subEl.textContent = `Your improvement recovers ${fmtCurrency(capturedAmount)}/month — ${capturedPct}% of total suppression`;
+      subEl.textContent = `Your improvement unlocks ${fmtCurrency(capturedAmount)}/month of this — ${capturedPct}% of the total available`;
       subEl.style.color = 'var(--green)';
     }
     document.getElementById('diag-opportunity-narrative').textContent =
