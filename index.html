@@ -963,6 +963,7 @@
       <div class="diag-panel">
         <div class="output-label">Estimated monthly revenue suppression</div>
         <div class="opportunity-amount" id="diag-opportunity-cost">£0</div>
+        <div class="output-sub" id="diag-suppression-pct" style="margin-bottom:0.5rem;font-size:0.72rem;font-weight:600;color:var(--gray-500)"></div>
         <div class="opportunity-narrative" id="diag-opportunity-narrative"></div>
       </div>
 
@@ -1267,17 +1268,23 @@
 
     // Panel B — Remaining suppression: revenue still uncaptured vs top-quartile AFTER improvement.
     // As improvement % rises → improvedRevenue rises → suppressionAmount falls → approaches zero.
-    // tqRevenue = what this pipeline would earn at top-quartile (3 hr) speed, from the current baseline.
-    const tqRefHrs          = Math.min(BENCHMARKS.topQuartile - 1, cur); // 3 hrs, or cur if already faster
-    const tqBaseM_B         = getBaseMultiplier(cur, tqRefHrs);
-    const tqAdjM_B          = getScenarioMultiplier(tqBaseM_B, state.scenario);
-    const tqRevenue         = r.monthlyRevenue * tqAdjM_B;
+    // CR is capped at 100% in tqRevenue to prevent impossible values (e.g. 80% CR × 1.44 = 115%).
+    const tqRefHrs   = Math.min(BENCHMARKS.topQuartile - 1, cur); // 3 hrs reference, or cur if already faster
+    const tqBaseM_B  = getBaseMultiplier(cur, tqRefHrs);
+    const tqAdjM_B   = getScenarioMultiplier(tqBaseM_B, state.scenario);
+    const tqCR_cap   = Math.min(state.conversionRate * tqAdjM_B, 100);
+    const tqRevenue  = r.monthlyEnquiries * (tqCR_cap / 100) * state.averageOrderValue;
     const suppressionAmount = Math.max(0, tqRevenue - r.improvedRevenue); // remaining gap after improvement
+    // Percentage suppression is CR-neutral: stays proportionally constant as pipeline size changes
+    const suppressionPct = tqRevenue > 0 ? Math.round((suppressionAmount / tqRevenue) * 100) : 0;
 
     const costEl = document.getElementById('diag-opportunity-cost');
     costEl.textContent = fmtCurrency(suppressionAmount);
     // Red = suppression remains (money still on the table); green = at/near top-quartile (good)
     costEl.classList.toggle('positive', suppressionAmount <= 0);
+    document.getElementById('diag-suppression-pct').textContent = suppressionAmount > 0
+      ? suppressionPct + '% of your top-quartile revenue potential still uncaptured'
+      : 'Fully capturing top-quartile revenue potential at this response speed';
     document.getElementById('diag-opportunity-narrative').textContent =
       getOpportunityNarrative(cur, nw, suppressionAmount, sym);
 
