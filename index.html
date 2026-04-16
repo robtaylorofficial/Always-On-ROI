@@ -830,16 +830,30 @@
       <input type="range" id="slider-improvement" min="0" max="90" step="5" value="50">
     </div>
 
-    <!-- 5 · Conversion rate -->
+    <!-- 5 · Conversion rate (today) -->
     <div class="slider-group">
       <div class="slider-header">
-        <label class="slider-label" for="slider-conversion">Conversion rate</label>
+        <label class="slider-label" for="slider-conversion">Conversion rate today</label>
         <div class="input-wrap">
           <input type="number" class="slider-value-input" id="input-conversion" value="20" min="0" max="100" step="1">
           <span class="input-affix">%</span>
         </div>
       </div>
+      <span class="slider-sublabel">Your current enquiry-to-sale rate (use 20% if unsure)</span>
       <input type="range" id="slider-conversion" min="0" max="100" step="1" value="20">
+    </div>
+
+    <!-- 5b · Conversion rate improvement (independent of response speed) -->
+    <div class="slider-group">
+      <div class="slider-header">
+        <label class="slider-label" for="slider-cr-improvement">Conversion rate improvement</label>
+        <div class="input-wrap">
+          <input type="number" class="slider-value-input" id="input-cr-improvement" value="0" min="0" max="50" step="5">
+          <span class="input-affix">%</span>
+        </div>
+      </div>
+      <span class="slider-sublabel">From sales training, process improvements, etc. (separate from response speed)</span>
+      <input type="range" id="slider-cr-improvement" min="0" max="50" step="5" value="0">
     </div>
 
     <!-- 6 · Average order value -->
@@ -1052,10 +1066,11 @@
     websiteVisits:       2000,
     enquiryRate:         2.5,
     directEnquiries:     50,
-    currentResponseTime: 48,
-    responseImprovement: 50,
-    conversionRate:      20,
-    averageOrderValue:   1500,
+    currentResponseTime:      48,
+    responseImprovement:      50,
+    conversionRate:           20,   // baseline CR today
+    conversionRateImprovement: 0,   // additional CR uplift independent of response speed
+    averageOrderValue:        1500,
     scenario:            'expected'
   };
 
@@ -1192,19 +1207,21 @@
   }
 
   function calculate() {
-    const { inputMode, websiteVisits, enquiryRate, directEnquiries, currentResponseTime, responseImprovement, conversionRate, averageOrderValue, scenario } = state;
+    const { inputMode, websiteVisits, enquiryRate, directEnquiries, currentResponseTime, responseImprovement, conversionRate, conversionRateImprovement, averageOrderValue, scenario } = state;
 
     const monthlyEnquiries  = inputMode === 'direct'
       ? directEnquiries
       : websiteVisits * (enquiryRate / 100);
     const monthlyOrders     = monthlyEnquiries * (conversionRate / 100);
-    const monthlyRevenue    = monthlyOrders * averageOrderValue;
+    const monthlyRevenue    = monthlyOrders * averageOrderValue; // baseline: today's CR, no improvements
 
     const newResponseTime   = currentResponseTime * (1 - responseImprovement / 100);
     const baseM             = getBaseMultiplier(currentResponseTime, newResponseTime);
-    const adjM              = getScenarioMultiplier(baseM, scenario);
+    const adjM              = getScenarioMultiplier(baseM, scenario); // response-speed multiplier only
 
-    const improvedCR        = Math.min(conversionRate * adjM, 100);
+    // Combined improvement: response speed × separate CR improvement (independent of each other)
+    const crImproveFactor   = 1 + conversionRateImprovement / 100;
+    const improvedCR        = Math.min(conversionRate * adjM * crImproveFactor, 100);
     const improvedOrders    = monthlyEnquiries * (improvedCR / 100);
     const improvedRevenue   = improvedOrders * averageOrderValue;
     const monthlyUplift     = improvedRevenue - monthlyRevenue;
@@ -1218,7 +1235,7 @@
     const netMonthly        = monthlyUplift - MONTHLY_COST;
     const payback           = netMonthly > 0 ? SETUP_COST / netMonthly : null;
 
-    return { monthlyEnquiries, monthlyRevenue, improvedRevenue, monthlyUplift, uplift6m, uplift12m, roi6m, roi12m, payback, newResponseTime, improvedCR };
+    return { monthlyEnquiries, monthlyRevenue, improvedRevenue, monthlyUplift, uplift6m, uplift12m, roi6m, roi12m, payback, newResponseTime, improvedCR, adjM };
   }
 
   // ── DOM UPDATES ───────────────────────────────────────────────
@@ -1295,8 +1312,11 @@
     // Always green — this is an opportunity figure, not a penalty
     costEl.classList.add('positive');
 
-    const capturedAmount = Math.min(Math.max(0, r.monthlyUplift), suppressionAmount);
-    const capturedPct    = suppressionAmount > 0 ? Math.round((capturedAmount / suppressionAmount) * 100) : 100;
+    // Captured = response-speed contribution only (excludes the separate CR improvement slider).
+    // This keeps Panel B a pure response-speed diagnostic, unaffected by the CR improvement input.
+    const speedOnlyUplift = Math.max(0, r.monthlyRevenue * (r.adjM - 1));
+    const capturedAmount  = Math.min(speedOnlyUplift, suppressionAmount);
+    const capturedPct     = suppressionAmount > 0 ? Math.round((capturedAmount / suppressionAmount) * 100) : 100;
     const hasImprovement = Math.abs(cur - nw) > 0.5;
     const subEl = document.getElementById('diag-suppression-pct');
     if (suppressionAmount <= 0) {
@@ -1596,7 +1616,8 @@
       ['Current response time',           state.currentResponseTime + ' hrs — ' + responseLabel(state.currentResponseTime)],
       ['Response time improvement',       state.responseImprovement + '%'],
       ['Improved response time',          fmtHrs(r.newResponseTime) + ' — ' + responseLabel(r.newResponseTime)],
-      ['Conversion rate (current)',       state.conversionRate + '%'],
+      ['Conversion rate (today)',         state.conversionRate + '%'],
+      ['Conversion rate improvement',     state.conversionRateImprovement > 0 ? '+' + state.conversionRateImprovement + '% (from sales process)' : 'None configured'],
       ['Average order value',             state.currency.symbol + state.averageOrderValue.toLocaleString('en-GB') + ' (' + state.currency.code + ')'],
     ];
     inputRows.forEach(([l, v], i) => row(l, v, COL.dgray, i % 2 === 0));
@@ -1739,9 +1760,10 @@
     wireSlider('slider-visits',      'input-visits',      'websiteVisits');
     wireSlider('slider-enquiry',     'input-enquiry',     'enquiryRate');
     wireSlider('slider-direct-enq',  'input-direct-enq',  'directEnquiries');
-    wireSlider('slider-response',    'input-response',    'currentResponseTime');
-    wireSlider('slider-improvement', 'input-improvement', 'responseImprovement');
-    wireSlider('slider-conversion',  'input-conversion',  'conversionRate');
+    wireSlider('slider-response',       'input-response',       'currentResponseTime');
+    wireSlider('slider-improvement',    'input-improvement',    'responseImprovement');
+    wireSlider('slider-conversion',     'input-conversion',     'conversionRate');
+    wireSlider('slider-cr-improvement', 'input-cr-improvement', 'conversionRateImprovement');
     wireSlider('slider-aov',         'input-aov',         'averageOrderValue');
 
     // Currency picker
