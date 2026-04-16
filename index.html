@@ -1159,12 +1159,15 @@
     return { items, totalUplift, multiplier: 1 + totalUplift };
   }
 
-  function getOpportunityNarrative(h, uplift, sym) {
+  function getOpportunityNarrative(cur, nw, uplift, sym) {
     if (uplift <= 0)
-      return 'Your response time is already near optimal. Minimal additional conversion uplift is modelled at this speed.';
+      return 'Your response speed is at or near top-quartile performance. The model shows minimal remaining conversion suppression vs the 3-hour benchmark.';
     const annual = sym + Math.round(uplift * 12).toLocaleString('en-GB');
-    const timeDesc = responseLabel(h).toLowerCase();
-    return `Responding ${timeDesc} is suppressing an estimated ${sym}${Math.round(uplift).toLocaleString('en-GB')} in conversion revenue every month — ${annual} annualised. This is not future upside; it is revenue your enquiry pipeline is already generating that your current response speed is failing to capture.`;
+    const hasImprovement = Math.abs(cur - nw) > 0.5;
+    if (hasImprovement) {
+      return `Even after improving from ${fmtHrs(cur)} to ${fmtHrs(nw)}, an estimated ${sym}${Math.round(uplift).toLocaleString('en-GB')}/month in conversion revenue remains uncaptured vs top-quartile (\u003c3 hr) performance — ${annual} annualised. This is the remaining commercial gap your chosen improvement has not yet closed.`;
+    }
+    return `At your current ${responseLabel(cur).toLowerCase()} response speed, an estimated ${sym}${Math.round(uplift).toLocaleString('en-GB')}/month in conversion revenue is being suppressed vs top-quartile (\u003c3 hr) performance — ${annual} annualised. This is not future upside; it is revenue your pipeline is generating that your current response speed is failing to capture.`;
   }
 
   function getCRNote(h, deltaCR) {
@@ -1262,19 +1265,21 @@
     document.getElementById('diag-verdict').textContent      = rating.verdictLine;
     document.getElementById('diag-position-val').textContent = fmtHrs(cur);
 
-    // Panel B — Suppression: what the CURRENT speed is costing vs top-quartile potential
-    // This is independent of the improvement slider — it diagnoses the current situation.
-    const tqRefHrs          = Math.min(BENCHMARKS.topQuartile - 1, cur); // 3 hrs reference
+    // Panel B — Remaining suppression: revenue still uncaptured vs top-quartile AFTER improvement.
+    // As improvement % rises → improvedRevenue rises → suppressionAmount falls → approaches zero.
+    // tqRevenue = what this pipeline would earn at top-quartile (3 hr) speed, from the current baseline.
+    const tqRefHrs          = Math.min(BENCHMARKS.topQuartile - 1, cur); // 3 hrs, or cur if already faster
     const tqBaseM_B         = getBaseMultiplier(cur, tqRefHrs);
     const tqAdjM_B          = getScenarioMultiplier(tqBaseM_B, state.scenario);
-    const suppressionAmount = r.monthlyRevenue * (tqAdjM_B - 1);
+    const tqRevenue         = r.monthlyRevenue * tqAdjM_B;
+    const suppressionAmount = Math.max(0, tqRevenue - r.improvedRevenue); // remaining gap after improvement
 
     const costEl = document.getElementById('diag-opportunity-cost');
     costEl.textContent = fmtCurrency(suppressionAmount);
-    // Red = suppression exists (bad); green = already at/near top-quartile (good)
+    // Red = suppression remains (money still on the table); green = at/near top-quartile (good)
     costEl.classList.toggle('positive', suppressionAmount <= 0);
     document.getElementById('diag-opportunity-narrative').textContent =
-      getOpportunityNarrative(cur, suppressionAmount, sym);
+      getOpportunityNarrative(cur, nw, suppressionAmount, sym);
 
     // Panel C — Conversion Headroom (potential at top-quartile <4 hr speed)
     const tqMultiplier  = getScenarioMultiplier(getBaseMultiplier(cur, Math.min(BENCHMARKS.topQuartile - 1, cur)), state.scenario);
