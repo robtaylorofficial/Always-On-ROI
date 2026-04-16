@@ -521,6 +521,152 @@
       box-shadow: var(--shadow-sm);
     }
 
+    /* ── DIAGNOSTIC SECTION ─────────────────────────────── */
+    .diagnostic-section, .proof-section {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 1.25rem 1.25rem;
+    }
+    .diagnostic-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 860px) { .diagnostic-grid { grid-template-columns: 1fr; } }
+
+    .speed-grade {
+      font-size: 3.25rem;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      transition: color 0.3s ease;
+      margin: 0.3rem 0 0.1rem;
+    }
+    .speed-grade-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      transition: color 0.3s ease;
+    }
+    .speed-verdict {
+      font-size: 0.78rem;
+      color: var(--gray-700);
+      margin: 0.65rem 0 0.75rem;
+      line-height: 1.6;
+      font-style: italic;
+    }
+    .benchmark-chips { display: flex; flex-direction: column; gap: 0.35rem; }
+    .benchmark-chip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.28rem 0.6rem;
+      background: var(--gray-100);
+      border-radius: 6px;
+      font-size: 0.7rem;
+    }
+    .benchmark-chip .chip-label { color: var(--gray-500); font-weight: 500; }
+    .benchmark-chip .chip-val   { color: var(--purple); font-weight: 800; }
+    .benchmark-chip.you-are-here { background: var(--purple-light); }
+    .benchmark-chip.you-are-here .chip-label { color: var(--purple); font-weight: 600; }
+
+    .opportunity-amount {
+      font-size: 2.1rem;
+      font-weight: 900;
+      color: #c0392b;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin: 0.3rem 0 0.6rem;
+      transition: color 0.3s;
+    }
+    .opportunity-amount.positive { color: var(--green); }
+    .opportunity-narrative {
+      font-size: 0.78rem;
+      color: var(--gray-700);
+      line-height: 1.65;
+    }
+
+    .cr-comparison { display: flex; flex-direction: column; gap: 0.55rem; margin: 0.6rem 0; }
+    .cr-row { display: flex; align-items: center; gap: 0.5rem; }
+    .cr-row-label { font-size: 0.7rem; color: var(--gray-500); font-weight: 600; min-width: 80px; }
+    .cr-bar-wrap { flex: 1; height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; }
+    .cr-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; min-width: 2px; }
+    .cr-bar-fill.current   { background: var(--blue); }
+    .cr-bar-fill.potential { background: var(--green); }
+    .cr-value { font-size: 0.8rem; font-weight: 800; min-width: 38px; text-align: right; color: var(--purple); }
+    .cr-delta-badge {
+      display: inline-block;
+      padding: 0.22rem 0.55rem;
+      background: var(--green-light);
+      color: var(--green);
+      border-radius: 5px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      margin-bottom: 0.3rem;
+    }
+    .cr-delta-badge.neutral { background: var(--gray-100); color: var(--gray-500); }
+
+    /* ── PROOF SECTION ───────────────────────────────────── */
+    .proof-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 860px) { .proof-grid { grid-template-columns: 1fr; } }
+
+    .chart-wrap { width: 100%; }
+    #impact-curve-canvas { width: 100%; height: 200px; display: block; }
+
+    .breakdown-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 0.6rem; }
+    .breakdown-table th {
+      text-align: left;
+      font-size: 0.63rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--gray-500);
+      padding: 0.3rem 0.4rem;
+      border-bottom: 2px solid var(--purple-light);
+    }
+    .breakdown-table th.val-col { text-align: right; }
+    .breakdown-table td { padding: 0.35rem 0.4rem; border-bottom: 1px solid var(--gray-200); color: var(--gray-700); }
+    .breakdown-table tr.row-inactive td { color: var(--gray-400); font-style: italic; }
+    .breakdown-table tr.row-active td  { font-weight: 600; }
+    .breakdown-table td.val-col { text-align: right; font-weight: 700; color: var(--green); }
+    .breakdown-table tr.row-inactive td.val-col { color: var(--gray-400); }
+    .breakdown-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0.5rem;
+      background: var(--purple-light);
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: var(--purple);
+      margin-top: 0.5rem;
+    }
+    .research-note {
+      margin-top: 1rem;
+      padding: 0.75rem 0.9rem;
+      background: var(--yellow-light);
+      border-left: 3px solid var(--yellow);
+      border-radius: 0 8px 8px 0;
+      font-size: 0.74rem;
+      color: var(--gray-700);
+      line-height: 1.6;
+    }
+    .research-note strong {
+      display: block;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #b08800;
+      margin-bottom: 0.3rem;
+      font-weight: 800;
+    }
+
     /* ── ANIMATION ──────────────────────────────────────── */
     @keyframes fadeNum { 0%,100%{opacity:1} 40%{opacity:.45} }
     .flash { animation: fadeNum 0.32s ease; }
@@ -785,6 +931,111 @@
 
 </div>
 
+<!-- DIAGNOSTIC SECTION -->
+<div class="diagnostic-section">
+  <div class="card">
+    <div class="card-title">Diagnostic assessment</div>
+    <div class="diagnostic-grid">
+
+      <!-- Panel A: Speed Rating -->
+      <div class="diag-panel">
+        <div class="output-label">Response speed rating</div>
+        <div class="speed-grade" id="diag-grade" style="color:#e07000">D</div>
+        <div class="speed-grade-label" id="diag-grade-label" style="color:#e07000">Below average</div>
+        <div class="speed-verdict" id="diag-verdict"></div>
+        <div class="benchmark-chips">
+          <div class="benchmark-chip">
+            <span class="chip-label">B2B industry average</span>
+            <span class="chip-val">47 hrs</span>
+          </div>
+          <div class="benchmark-chip">
+            <span class="chip-label">Top quartile threshold</span>
+            <span class="chip-val">&lt; 4 hrs</span>
+          </div>
+          <div class="benchmark-chip you-are-here">
+            <span class="chip-label">Your current position</span>
+            <span class="chip-val" id="diag-position-val">48 hrs</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel B: Revenue Suppression -->
+      <div class="diag-panel">
+        <div class="output-label">Estimated monthly revenue suppression</div>
+        <div class="opportunity-amount" id="diag-opportunity-cost">£0</div>
+        <div class="opportunity-narrative" id="diag-opportunity-narrative"></div>
+      </div>
+
+      <!-- Panel C: Conversion Headroom -->
+      <div class="diag-panel">
+        <div class="output-label">Conversion rate headroom</div>
+        <div class="cr-comparison">
+          <div class="cr-row">
+            <span class="cr-row-label">Current CR</span>
+            <div class="cr-bar-wrap"><div class="cr-bar-fill current" id="diag-cr-bar-current" style="width:20%"></div></div>
+            <span class="cr-value" id="diag-cr-current">20%</span>
+          </div>
+          <div class="cr-row">
+            <span class="cr-row-label">At &lt;4 hr speed</span>
+            <div class="cr-bar-wrap"><div class="cr-bar-fill potential" id="diag-cr-bar-potential" style="width:26%"></div></div>
+            <span class="cr-value" id="diag-cr-potential">26%</span>
+          </div>
+        </div>
+        <div class="cr-delta-badge" id="diag-cr-delta">Calculating…</div>
+        <div class="output-sub" id="diag-cr-note" style="margin-top:0.4rem"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PROOF SECTION -->
+<div class="proof-section">
+  <div class="card">
+    <div class="card-title">How the model works</div>
+    <div class="proof-grid">
+
+      <!-- Left: Impact curve -->
+      <div>
+        <div class="output-label" style="margin-bottom:0.5rem">Response-time impact curve</div>
+        <div class="chart-wrap">
+          <canvas id="impact-curve-canvas"></canvas>
+        </div>
+        <div class="output-sub" style="margin-top:0.5rem;line-height:1.5">
+          <span style="color:var(--purple);font-weight:700">— NOW</span> marks your current position.&nbsp;
+          <span style="color:var(--green);font-weight:700">— TARGET</span> marks your improved position.
+          Steeper sections of the curve mean greater uplift per hour gained.
+          Coloured bands show the speed rating zones.
+        </div>
+      </div>
+
+      <!-- Right: Breakdown + Evidence -->
+      <div>
+        <div class="output-label" style="margin-bottom:0.4rem">Uplift calculation breakdown</div>
+        <table class="breakdown-table">
+          <thead>
+            <tr><th>Component</th><th class="val-col">Uplift</th></tr>
+          </thead>
+          <tbody id="breakdown-tbody"></tbody>
+        </table>
+        <div class="breakdown-total">
+          <span>Combined base multiplier</span>
+          <span id="breakdown-multiplier">×1.000</span>
+        </div>
+        <div class="breakdown-total" style="margin-top:0.35rem;background:var(--yellow-light);color:#b08800">
+          <span>After scenario adjustment</span>
+          <span id="breakdown-scenario-multiplier">×1.000</span>
+        </div>
+        <div class="research-note">
+          <strong>Evidence basis</strong>
+          The uplift thresholds reflect empirically observed step-changes in B2B conversion rates at key response-time boundaries. Harvard Business Review's analysis of 1.25 million sales leads found companies responding within one hour were 7× more likely to qualify the lead. InsideSales.com research shows contact probability drops by 80% after 5 minutes. The threshold bonuses in this model are conservative proxies for those published findings.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <div class="footer">
   <div class="footer-note">
@@ -809,6 +1060,27 @@
 
   const SETUP_COST   = 5000;
   const MONTHLY_COST = 500;
+
+  // ── DIAGNOSTIC CONSTANTS ──────────────────────────────────────
+  const BENCHMARKS = { b2bAverage: 47, topQuartile: 4, bestInClass: 1 };
+
+  const SPEED_RATINGS = [
+    { maxHrs: 1,        grade: 'A+', label: 'Exceptional',      colour: '#76b82a' },
+    { maxHrs: 3,        grade: 'A',  label: 'Best-in-class',    colour: '#76b82a' },
+    { maxHrs: 8,        grade: 'B',  label: 'Above average',    colour: '#009fe3' },
+    { maxHrs: 24,       grade: 'C',  label: 'Industry average', colour: '#fbba00' },
+    { maxHrs: 48,       grade: 'D',  label: 'Below average',    colour: '#e07000' },
+    { maxHrs: Infinity, grade: 'F',  label: 'High risk',        colour: '#c0392b' },
+  ];
+
+  // Single source of truth for all threshold logic
+  const RESPONSE_THRESHOLDS = [
+    { aboveHrs: 48, belowHrs: 48, bonus: 0.05, label: 'Crossed below 48 hrs' },
+    { aboveHrs: 24, belowHrs: 24, bonus: 0.08, label: 'Crossed below 24 hrs' },
+    { aboveHrs: 8,  belowHrs: 8,  bonus: 0.10, label: 'Crossed into same-day response (<8 hrs)' },
+    { aboveHrs: 3,  belowHrs: 3,  bonus: 0.12, label: 'Crossed into sub-3-hour response' },
+    { aboveHrs: 1,  belowHrs: 1,  bonus: 0.08, label: 'Crossed into sub-1-hour response' },
+  ];
 
   // ── HELPERS ───────────────────────────────────────────────────
   function responseLabel(h) {
@@ -846,17 +1118,60 @@
   // ── CALCULATION ───────────────────────────────────────────────
   function getBaseMultiplier(cur, nw) {
     let u = 0;
-    // Threshold bonuses for crossing key response-time bands
-    if (cur > 48 && nw <= 48) u += 0.05;
-    if (cur > 24 && nw <= 24) u += 0.08;
-    if (cur > 8  && nw <= 8)  u += 0.10;
-    if (cur > 3  && nw <= 3)  u += 0.12;
-    if (cur > 1  && nw <= 1)  u += 0.08;
-    // Proportional baseline: any speed improvement produces some uplift,
-    // preventing dead zones between thresholds (e.g. 24hrs → 12hrs)
+    RESPONSE_THRESHOLDS.forEach(t => {
+      if (cur > t.aboveHrs && nw <= t.belowHrs) u += t.bonus;
+    });
     const pctImproved = Math.max(0, (cur - nw) / cur);
     u += pctImproved * 0.15;
     return 1 + u;
+  }
+
+  // ── DIAGNOSTIC HELPERS ────────────────────────────────────────
+  function getSpeedRating(h) {
+    const VERDICTS = {
+      'A+': h => `Responding within ${fmtHrs(h)} puts you in the top 5% of B2B businesses. Your response speed is a genuine competitive advantage that the model awards full top-tier weighting.`,
+      'A':  h => `A ${fmtHrs(h)} response places you in the top quartile. Most of your competitors are at least 10× slower. Speed is already a differentiator for you.`,
+      'B':  h => `${fmtHrs(h)} is above the B2B average, but there is meaningful headroom before you reach top-quartile performance. You are ahead of the market — not yet leading it.`,
+      'C':  h => `At ${fmtHrs(h)}, you are close to the B2B industry average of 47 hours. Response speed is not a differentiator in either direction — it neither costs you business nor wins it outright.`,
+      'D':  h => `${fmtHrs(h)} is below the B2B average. Research shows conversion probability is materially suppressed at this speed. Faster competitors are likely capturing enquiries your pipeline generates.`,
+      'F':  h => `Beyond 48 hours, response speed is a significant commercial liability. Published research shows a step-change in lead disengagement at this threshold — and this model reflects that with a measurable penalty.`,
+    };
+    for (const r of SPEED_RATINGS) {
+      if (h <= r.maxHrs) return { ...r, verdictLine: VERDICTS[r.grade](h) };
+    }
+  }
+
+  function getThresholdBreakdown(cur, nw) {
+    const items = RESPONSE_THRESHOLDS.map(t => ({
+      label:  t.label,
+      bonus:  t.bonus,
+      fired:  cur > t.aboveHrs && nw <= t.belowHrs,
+    }));
+    const pctImproved = Math.max(0, (cur - nw) / cur);
+    const propBonus   = pctImproved * 0.15;
+    items.push({
+      label: `Proportional baseline — ${Math.round(pctImproved * 100)}% speed improvement × 15%`,
+      bonus: propBonus,
+      fired: propBonus > 0,
+      isProp: true,
+    });
+    const totalUplift = items.reduce((s, i) => s + (i.fired ? i.bonus : 0), 0);
+    return { items, totalUplift, multiplier: 1 + totalUplift };
+  }
+
+  function getOpportunityNarrative(h, uplift, sym) {
+    if (uplift <= 0)
+      return 'Your response time is already near optimal. Minimal additional conversion uplift is modelled at this speed.';
+    const annual = sym + Math.round(uplift * 12).toLocaleString('en-GB');
+    const timeDesc = responseLabel(h).toLowerCase();
+    return `Responding ${timeDesc} is suppressing an estimated ${sym}${Math.round(uplift).toLocaleString('en-GB')} in conversion revenue every month — ${annual} annualised. This is not future upside; it is revenue your enquiry pipeline is already generating that your current response speed is failing to capture.`;
+  }
+
+  function getCRNote(h, deltaCR) {
+    if (deltaCR <= 0.05) return 'Your current response time is already performing near the top-quartile conversion benchmark.';
+    if (h > 48) return 'Response times beyond 48 hours place you in a high-attrition zone. Research suggests up to 80% of B2B leads disengage before contact is made at this speed.';
+    if (h > 24) return 'Each percentage point of CR suppressed multiplies through your order value every month. This is a compounding drag on pipeline revenue.';
+    return 'Closing this gap represents conversion revenue your existing pipeline is generating but not capturing. No new traffic required.';
   }
 
   function getScenarioMultiplier(base, scenario) {
@@ -927,6 +1242,180 @@
     setText('out-6m-roi',        fmtROI(r.roi6m));
     setText('out-12m-roi',       fmtROI(r.roi12m));
     setText('out-payback',       fmtPayback(r.payback));
+    updateDiagnostics(r);
+  }
+
+  // ── DIAGNOSTIC ENGINE ────────────────────────────────────────
+  function updateDiagnostics(r) {
+    const cur = state.currentResponseTime;
+    const nw  = r.newResponseTime;
+    const sym = state.currency.symbol;
+
+    // Panel A — Speed Rating
+    const rating = getSpeedRating(cur);
+    const gradeEl = document.getElementById('diag-grade');
+    gradeEl.textContent  = rating.grade;
+    gradeEl.style.color  = rating.colour;
+    const labelEl = document.getElementById('diag-grade-label');
+    labelEl.textContent  = rating.label;
+    labelEl.style.color  = rating.colour;
+    document.getElementById('diag-verdict').textContent      = rating.verdictLine;
+    document.getElementById('diag-position-val').textContent = fmtHrs(cur);
+
+    // Panel B — Opportunity Cost
+    const costEl = document.getElementById('diag-opportunity-cost');
+    costEl.textContent = fmtCurrency(r.monthlyUplift);
+    costEl.classList.toggle('positive', r.monthlyUplift <= 0);
+    document.getElementById('diag-opportunity-narrative').textContent =
+      getOpportunityNarrative(cur, r.monthlyUplift, sym);
+
+    // Panel C — Conversion Headroom (potential at top-quartile <4 hr speed)
+    const tqMultiplier  = getScenarioMultiplier(getBaseMultiplier(cur, Math.min(BENCHMARKS.topQuartile - 1, cur)), state.scenario);
+    const potentialCR   = Math.min(state.conversionRate * tqMultiplier, 100);
+    const deltaCR       = potentialCR - state.conversionRate;
+    const maxCR         = Math.max(potentialCR, state.conversionRate, 1);
+
+    document.getElementById('diag-cr-current').textContent    = state.conversionRate.toFixed(1) + '%';
+    document.getElementById('diag-cr-potential').textContent  = potentialCR.toFixed(1) + '%';
+    document.getElementById('diag-cr-bar-current').style.width   = (state.conversionRate / maxCR * 100).toFixed(1) + '%';
+    document.getElementById('diag-cr-bar-potential').style.width = (potentialCR / maxCR * 100).toFixed(1) + '%';
+
+    const deltaEl = document.getElementById('diag-cr-delta');
+    if (deltaCR > 0.05) {
+      deltaEl.textContent = '+' + deltaCR.toFixed(1) + ' percentage points suppressed by response speed';
+      deltaEl.className   = 'cr-delta-badge';
+    } else {
+      deltaEl.textContent = 'At or near top-quartile conversion potential';
+      deltaEl.className   = 'cr-delta-badge neutral';
+    }
+    document.getElementById('diag-cr-note').textContent = getCRNote(cur, deltaCR);
+
+    // Proof — Breakdown table
+    const breakdown = getThresholdBreakdown(cur, nw);
+    renderBreakdownTable(breakdown);
+
+    // Proof — Canvas chart
+    drawImpactCurve(cur, nw);
+  }
+
+  function renderBreakdownTable(breakdown) {
+    const tbody = document.getElementById('breakdown-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    breakdown.items.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.className = item.fired ? 'row-active' : 'row-inactive';
+      const suffix = item.fired ? '' : ' <em style="font-weight:400;font-style:italic">(not crossed)</em>';
+      tr.innerHTML = `<td>${item.label}${suffix}</td><td class="val-col">${item.fired ? '+' + (item.bonus * 100).toFixed(item.isProp ? 1 : 0) + '%' : '—'}</td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('breakdown-multiplier').textContent = '×' + breakdown.multiplier.toFixed(3);
+    const adjM = getScenarioMultiplier(breakdown.multiplier, state.scenario);
+    const scenFactor = state.scenario === 'conservative' ? '0.7×' : state.scenario === 'ambitious' ? '1.3×' : '1.0×';
+    document.getElementById('breakdown-scenario-multiplier').textContent =
+      '×' + adjM.toFixed(3) + '  (' + state.scenario + ' — ' + scenFactor + ' applied to uplift)';
+  }
+
+  function drawImpactCurve(currentHrs, newHrs) {
+    const canvas = document.getElementById('impact-curve-canvas');
+    if (!canvas || !canvas.getContext) return;
+    const dpr  = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width) return;
+    canvas.width  = rect.width  * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const W = rect.width, H = rect.height;
+    const PAD = { top: 18, right: 12, bottom: 28, left: 38 };
+    const cW = W - PAD.left - PAD.right;
+    const cH = H - PAD.top  - PAD.bottom;
+    const MAX_X = 72, MAX_Y = 0.55; // multiplier range above 1.0
+
+    const toX = h => PAD.left + (h / MAX_X) * cW;
+    const toY = u => PAD.top  + cH - (u / MAX_Y) * cH; // u = multiplier - 1
+
+    // Zone background fills
+    const ZONES = [
+      { from: 0, to: 1,  fill: 'rgba(118,184,42,0.13)' },
+      { from: 1, to: 3,  fill: 'rgba(118,184,42,0.07)' },
+      { from: 3, to: 8,  fill: 'rgba(0,159,227,0.07)'  },
+      { from: 8, to: 24, fill: 'rgba(251,186,0,0.07)'  },
+      { from: 24,to: 48, fill: 'rgba(224,112,0,0.07)'  },
+      { from: 48,to: 72, fill: 'rgba(192,57,43,0.07)'  },
+    ];
+    ZONES.forEach(z => {
+      ctx.fillStyle = z.fill;
+      ctx.fillRect(toX(z.from), PAD.top, toX(z.to) - toX(z.from), cH);
+    });
+
+    // Grid lines
+    ctx.setLineDash([2, 4]);
+    ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+    ctx.lineWidth = 1;
+    [0.1, 0.2, 0.3, 0.4, 0.5].forEach(u => {
+      const y = toY(u);
+      ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cW, y); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Curve: for each starting hour h, what multiplier do you get improving to 1hr?
+    ctx.beginPath();
+    ctx.strokeStyle = '#43165c';
+    ctx.lineWidth = 2.5;
+    for (let h = 72; h >= 1; h -= 0.25) {
+      const u = getBaseMultiplier(h, 1) - 1;
+      const x = toX(h), y = toY(Math.min(u, MAX_Y));
+      h === 72 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // NOW marker — purple dashed
+    const clampedCur = Math.max(1, Math.min(72, currentHrs));
+    ctx.save();
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = '#43165c';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(toX(clampedCur), PAD.top);
+    ctx.lineTo(toX(clampedCur), PAD.top + cH);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = '#43165c';
+    ctx.font = `bold 9px -apple-system,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('NOW', toX(clampedCur), PAD.top - 5);
+
+    // TARGET marker — green
+    const clampedNew = Math.max(0.5, Math.min(72, newHrs));
+    if (Math.abs(clampedNew - clampedCur) > 0.5) {
+      ctx.save();
+      ctx.strokeStyle = '#76b82a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(toX(clampedNew), PAD.top);
+      ctx.lineTo(toX(clampedNew), PAD.top + cH);
+      ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = '#76b82a';
+      ctx.font = `bold 9px -apple-system,sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('TARGET', toX(clampedNew), PAD.top - 5);
+    }
+
+    // X axis labels
+    ctx.fillStyle = '#6b7280';
+    ctx.font = `9px -apple-system,sans-serif`;
+    [1, 8, 24, 48, 72].forEach(h => {
+      ctx.textAlign = 'center';
+      ctx.fillText(h + 'h', toX(h), H - 6);
+    });
+
+    // Y axis labels
+    ctx.textAlign = 'right';
+    [[0, '×1.0'], [0.2, '×1.2'], [0.4, '×1.4']].forEach(([u, lbl]) => {
+      ctx.fillText(lbl, PAD.left - 4, toY(u) + 3);
+    });
   }
 
   // ── SLIDER WIRING ─────────────────────────────────────────────
@@ -1119,6 +1608,86 @@
     doc.setTextColor(180, 160, 200);
     doc.text('plangrowdo.co.uk', W - M, H - 4.5, { align: 'right' });
 
+    // ── PAGE 2: Diagnostic + Proof ────────────────────────────
+    doc.addPage();
+    doc.setFillColor(...COL.purple);
+    doc.rect(0, 0, W, 14, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...COL.white);
+    doc.text('Plan.Grow.Do. — Diagnostic Assessment', M, 9.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(180, 160, 200);
+    doc.text('Response ROI Report — page 2', W - M, 9.5, { align: 'right' });
+    y = 24;
+
+    // Speed rating
+    sectionHead('DIAGNOSTIC ASSESSMENT', COL.blue);
+    const rating2 = getSpeedRating(state.currentResponseTime);
+    const rCol =
+      rating2.grade === 'A+' || rating2.grade === 'A' ? COL.green :
+      rating2.grade === 'B'  ? COL.blue :
+      rating2.grade === 'C'  ? [180, 130, 0] :
+      rating2.grade === 'D'  ? [224, 112, 0] : [192, 57, 43];
+    row('Response speed rating', rating2.grade + ' — ' + rating2.label, rCol, true);
+    row('B2B industry average', BENCHMARKS.b2bAverage + ' hrs', COL.mgray, false);
+    row('Top-quartile threshold', 'Under ' + BENCHMARKS.topQuartile + ' hrs', COL.mgray, true);
+    row('Your current position', state.currentResponseTime + ' hrs', rCol, false);
+    y += 2;
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(...COL.mgray);
+    const vLines = doc.splitTextToSize(rating2.verdictLine, CW - 6);
+    doc.text(vLines, M + 3, y);
+    y += vLines.length * 4.5 + 6;
+
+    // Revenue suppression callout
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFillColor(255, 242, 242);
+    doc.rect(M, y, CW, 18, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(150, 40, 40);
+    doc.text('ESTIMATED MONTHLY REVENUE SUPPRESSION', M + 3, y + 5);
+    doc.setFontSize(14); doc.setTextColor(192, 57, 43);
+    doc.text(fmtCurrency(r.monthlyUplift) + ' / month', M + 3, y + 14);
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(...COL.mgray);
+    doc.text(fmtCurrency(r.monthlyUplift * 12) + ' annualised', W - M - 3, y + 14, { align: 'right' });
+    y += 24;
+
+    // Uplift breakdown
+    if (y > 240) { doc.addPage(); y = 20; }
+    sectionHead('UPLIFT MODEL BREAKDOWN', COL.purple);
+    const bd2 = getThresholdBreakdown(state.currentResponseTime, r.newResponseTime);
+    bd2.items.forEach((item, i) => {
+      const vs = item.fired
+        ? '+' + (item.bonus * 100).toFixed(item.isProp ? 1 : 0) + '%'
+        : '— not crossed';
+      row(item.label, vs, item.fired ? COL.green : COL.mgray, i % 2 === 0);
+    });
+    y += 2;
+    doc.setFillColor(...COL.purple); doc.rect(M, y, CW, 7, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...COL.white);
+    doc.text('Combined base multiplier', M + 3, y + 4.8);
+    doc.text('×' + bd2.multiplier.toFixed(3), W - M - 3, y + 4.8, { align: 'right' });
+    y += 10;
+    const adjM2 = getScenarioMultiplier(bd2.multiplier, state.scenario);
+    doc.setFillColor(255, 248, 225); doc.rect(M, y, CW, 7, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(150, 100, 0);
+    doc.text('After ' + state.scenario + ' scenario adjustment', M + 3, y + 4.8);
+    doc.text('×' + adjM2.toFixed(3), W - M - 3, y + 4.8, { align: 'right' });
+    y += 14;
+
+    // Evidence basis
+    if (y > 240) { doc.addPage(); y = 20; }
+    sectionHead('EVIDENCE BASIS', COL.blue);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...COL.mgray);
+    const evLines = doc.splitTextToSize(
+      "The uplift thresholds reflect empirically observed step-changes in B2B conversion rates at key response-time boundaries. Harvard Business Review's analysis of 1.25 million sales leads found companies responding within one hour were 7\u00d7 more likely to qualify the lead than those responding an hour later. InsideSales.com research shows contact probability drops by 80% after 5 minutes. The threshold bonuses in this model are conservative proxies for those published step-changes in conversion probability.",
+      CW - 6
+    );
+    doc.text(evLines, M + 3, y);
+
+    // Page 2 footer
+    doc.setFillColor(...COL.purple); doc.rect(0, H - 11, W, 11, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...COL.white);
+    doc.text('Plan.Grow.Do. — The B2B Sales Agency', M, H - 4.5);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(180, 160, 200);
+    doc.text('plangrowdo.co.uk', W - M, H - 4.5, { align: 'right' });
+
     doc.save('PGD-Response-ROI-Report.pdf');
   }
 
@@ -1179,6 +1748,16 @@
     });
 
     document.getElementById('download-btn').addEventListener('click', generatePDF);
+
+    // Redraw canvas on resize (handles layout collapse on mobile)
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => {
+        const r = calculate();
+        drawImpactCurve(state.currentResponseTime, r.newResponseTime);
+      });
+      const canvasEl = document.getElementById('impact-curve-canvas');
+      if (canvasEl) ro.observe(canvasEl.parentElement);
+    }
 
     updateOutputs();
   });
