@@ -975,7 +975,7 @@
 
       <!-- Panel B: Revenue Suppression -->
       <div class="diag-panel">
-        <div class="output-label">Revenue opportunity from reaching top-quartile response speed</div>
+        <div class="output-label">Estimated additional monthly revenue</div>
         <div class="opportunity-amount positive" id="diag-opportunity-cost">£0</div>
         <div class="output-sub" id="diag-suppression-pct" style="margin:0.2rem 0 0.55rem;font-size:0.78rem;font-weight:700;color:var(--green)"></div>
         <div class="opportunity-narrative" id="diag-opportunity-narrative"></div>
@@ -1175,22 +1175,25 @@
     return { items, totalUplift, multiplier: 1 + totalUplift };
   }
 
-  function getOpportunityNarrative(cur, nw, opportunityTotal, captured, sym) {
-    if (opportunityTotal <= 0)
-      return 'Your current response speed is at or near top-quartile. The model shows no meaningful remaining conversion opportunity from further speed improvement.';
-    const totalStr  = sym + Math.round(opportunityTotal).toLocaleString('en-GB');
-    const annualStr = sym + Math.round(opportunityTotal * 12).toLocaleString('en-GB');
-    const hasImprovement = Math.abs(cur - nw) > 0.5;
-    if (!hasImprovement) {
-      return `At your current ${responseLabel(cur).toLowerCase()} response speed, the model estimates ${totalStr}/month in conversion revenue that top-quartile (\u003c3 hr) businesses would capture from the same pipeline — ${annualStr} annualised. A higher conversion rate means a larger pipeline, so the absolute opportunity scales with your business size. Use the improvement slider to model how much of this you can unlock.`;
+  function getOpportunityNarrative(cur, nw, total, speedPart, crPart, sym) {
+    if (total <= 0)
+      return 'No improvements are currently configured. Set a response time improvement and/or a conversion rate improvement above to see your estimated monthly revenue uplift.';
+    const totalStr  = sym + Math.round(total).toLocaleString('en-GB');
+    const annualStr = sym + Math.round(total * 12).toLocaleString('en-GB');
+    const hasSpeed  = speedPart > 1;
+    const hasCR     = crPart > 1;
+    if (hasSpeed && hasCR) {
+      const sStr = sym + Math.round(speedPart).toLocaleString('en-GB');
+      const cStr = sym + Math.round(crPart).toLocaleString('en-GB');
+      return `Combining your ${fmtHrs(nw)} response speed improvement with your conversion rate uplift delivers an estimated ${totalStr}/month — ${annualStr} annualised. Of this, ${sStr}/month is attributable to faster response and ${cStr}/month to your conversion rate improvement. These two levers are independent and compound each other.`;
     }
-    const capStr    = sym + Math.round(captured).toLocaleString('en-GB');
-    const remaining = Math.max(0, opportunityTotal - captured);
-    const remStr    = sym + Math.round(remaining).toLocaleString('en-GB');
-    if (remaining <= 0) {
-      return `Your improved ${fmtHrs(nw)} response speed fully closes the top-quartile gap — the model shows no remaining conversion opportunity from further speed improvement at this level.`;
+    if (hasSpeed) {
+      return `Improving response from ${fmtHrs(cur)} to ${fmtHrs(nw)} delivers an estimated ${totalStr}/month in additional conversion revenue — ${annualStr} annualised. Add a conversion rate improvement above to compound this with gains from better sales process or training.`;
     }
-    return `The total response-speed opportunity at top-quartile (\u003c3 hr) performance is ${totalStr}/month. Your improvement to ${fmtHrs(nw)} unlocks ${capStr} of this — ${remStr}/month remains available if you close the full gap to top-quartile speed.`;
+    if (hasCR) {
+      return `Your conversion rate improvement delivers an estimated ${totalStr}/month in additional revenue — ${annualStr} annualised. Add a response speed improvement to layer on the additional uplift that faster response generates — the two effects compound.`;
+    }
+    return `Your improvements deliver an estimated ${totalStr}/month — ${annualStr} annualised.`;
   }
 
   function getCRNote(h, deltaCR) {
@@ -1290,47 +1293,35 @@
     document.getElementById('diag-verdict').textContent      = rating.verdictLine;
     document.getElementById('diag-position-val').textContent = fmtHrs(cur);
 
-    // Panel B — Remaining suppression: revenue still uncaptured vs top-quartile AFTER improvement.
-    // As improvement % rises → improvedRevenue rises → suppressionAmount falls → approaches zero.
-    // CR is capped at 100% in tqRevenue to prevent impossible values (e.g. 80% CR × 1.44 = 115%).
-    const tqRefHrs   = Math.min(BENCHMARKS.topQuartile - 1, cur); // 3 hrs reference, or cur if already faster
-    const tqBaseM_B  = getBaseMultiplier(cur, tqRefHrs);
-    const tqAdjM_B   = getScenarioMultiplier(tqBaseM_B, state.scenario);
-    const tqCR_cap   = Math.min(state.conversionRate * tqAdjM_B, 100);
-    const tqRevenue  = r.monthlyEnquiries * (tqCR_cap / 100) * state.averageOrderValue;
-    const suppressionAmount = Math.max(0, tqRevenue - r.improvedRevenue); // remaining gap after improvement
-    // Percentage suppression is CR-neutral: stays proportionally constant as pipeline size changes
-    const suppressionPct = tqRevenue > 0 ? Math.round((suppressionAmount / tqRevenue) * 100) : 0;
-
-    // suppressionAmount = total revenue suppressed by CURRENT speed vs top-quartile.
-    // This is the diagnostic headline — the full cost of slow response at this pipeline size.
-    // It is intentionally independent of the improvement slider: shows the total problem, not the partial fix.
-    // Panel B is framed as OPPORTUNITY (green), not cost (red).
-    // Higher CR means a bigger green number — correct: larger pipeline = more to gain from fast response.
-    const costEl = document.getElementById('diag-opportunity-cost');
-    costEl.textContent = suppressionAmount > 0 ? fmtCurrency(suppressionAmount) : fmtCurrency(0);
-    // Always green — this is an opportunity figure, not a penalty
-    costEl.classList.add('positive');
-
-    // Captured = response-speed contribution only (excludes the separate CR improvement slider).
-    // This keeps Panel B a pure response-speed diagnostic, unaffected by the CR improvement input.
+    // Panel B — Total additional monthly revenue from all configured improvements.
+    // Goes UP as response speed improves. Goes UP as CR improves. Goes UP as pipeline grows.
+    // All of these are correct: more improvement = more uplift, bigger business = bigger absolute gain.
     const speedOnlyUplift = Math.max(0, r.monthlyRevenue * (r.adjM - 1));
-    const capturedAmount  = Math.min(speedOnlyUplift, suppressionAmount);
-    const capturedPct     = suppressionAmount > 0 ? Math.round((capturedAmount / suppressionAmount) * 100) : 100;
-    const hasImprovement = Math.abs(cur - nw) > 0.5;
+    const crImprovUplift  = Math.max(0, r.monthlyUplift - speedOnlyUplift);
+    const totalUplift     = r.monthlyUplift;
+
+    const costEl = document.getElementById('diag-opportunity-cost');
+    costEl.textContent = fmtCurrency(totalUplift);
+    costEl.classList.add('positive'); // always green — uplift is always a positive signal
+
     const subEl = document.getElementById('diag-suppression-pct');
-    if (suppressionAmount <= 0) {
-      subEl.textContent = 'Already at or near top-quartile speed — full opportunity captured';
-      subEl.style.color = 'var(--green)';
-    } else if (!hasImprovement) {
-      subEl.textContent = 'Use the response improvement slider above to see how much of this you can unlock';
+    const hasSpeedImprovement = Math.abs(cur - nw) > 0.5;
+    const hasCRImprovement    = state.conversionRateImprovement > 0;
+    if (totalUplift <= 0) {
+      subEl.textContent = 'Set a response improvement and/or conversion rate improvement above to see your monthly uplift';
       subEl.style.color = 'var(--gray-500)';
+    } else if (hasSpeedImprovement && hasCRImprovement) {
+      subEl.textContent = `${fmtCurrency(speedOnlyUplift)}/month from response speed · ${fmtCurrency(crImprovUplift)}/month from conversion rate improvement`;
+      subEl.style.color = 'var(--green)';
+    } else if (hasSpeedImprovement) {
+      subEl.textContent = `Driven by response speed improvement — add a conversion rate improvement to compound this further`;
+      subEl.style.color = 'var(--green)';
     } else {
-      subEl.textContent = `Your improvement unlocks ${fmtCurrency(capturedAmount)}/month of this — ${capturedPct}% of the total available`;
+      subEl.textContent = `Driven by conversion rate improvement — add a response speed improvement to compound this further`;
       subEl.style.color = 'var(--green)';
     }
     document.getElementById('diag-opportunity-narrative').textContent =
-      getOpportunityNarrative(cur, nw, suppressionAmount, capturedAmount, sym);
+      getOpportunityNarrative(cur, nw, totalUplift, speedOnlyUplift, crImprovUplift, sym);
 
     // Panel C — Conversion Headroom (potential at top-quartile <4 hr speed)
     const tqMultiplier  = getScenarioMultiplier(getBaseMultiplier(cur, Math.min(BENCHMARKS.topQuartile - 1, cur)), state.scenario);
