@@ -1028,7 +1028,7 @@
         </div>
         <div class="research-note">
           <strong>Evidence basis</strong>
-          The uplift thresholds reflect empirically observed step-changes in B2B conversion rates at key response-time boundaries. Harvard Business Review's analysis of 1.25 million sales leads found companies responding within one hour were 7× more likely to qualify the lead. InsideSales.com research shows contact probability drops by 80% after 5 minutes. The threshold bonuses in this model are conservative proxies for those published findings.
+          The uplift thresholds reflect empirically observed step-changes in B2B conversion rates at key response-time boundaries. <strong>Harvard Business Review</strong> (Oldroyd et al., "The Short Life of Online Sales Leads", 2011) — analysis of 1.25 million sales leads found businesses responding within one hour were 7× more likely to qualify a lead than those responding an hour later. <strong>InsideSales.com / XANT Lead Response Study</strong> — contact probability drops by over 80% after just five minutes. <strong>Buyer Revolution / Demand Gen Report</strong> — B2B buyers now expect a substantive response within 3 hours of initial enquiry; the majority choose the first vendor who responds. The threshold bonuses in this model are conservative proxies for those published step-changes.
         </div>
       </div>
 
@@ -1262,12 +1262,19 @@
     document.getElementById('diag-verdict').textContent      = rating.verdictLine;
     document.getElementById('diag-position-val').textContent = fmtHrs(cur);
 
-    // Panel B — Opportunity Cost
+    // Panel B — Suppression: what the CURRENT speed is costing vs top-quartile potential
+    // This is independent of the improvement slider — it diagnoses the current situation.
+    const tqRefHrs          = Math.min(BENCHMARKS.topQuartile - 1, cur); // 3 hrs reference
+    const tqBaseM_B         = getBaseMultiplier(cur, tqRefHrs);
+    const tqAdjM_B          = getScenarioMultiplier(tqBaseM_B, state.scenario);
+    const suppressionAmount = r.monthlyRevenue * (tqAdjM_B - 1);
+
     const costEl = document.getElementById('diag-opportunity-cost');
-    costEl.textContent = fmtCurrency(r.monthlyUplift);
-    costEl.classList.toggle('positive', r.monthlyUplift <= 0);
+    costEl.textContent = fmtCurrency(suppressionAmount);
+    // Red = suppression exists (bad); green = already at/near top-quartile (good)
+    costEl.classList.toggle('positive', suppressionAmount <= 0);
     document.getElementById('diag-opportunity-narrative').textContent =
-      getOpportunityNarrative(cur, r.monthlyUplift, sym);
+      getOpportunityNarrative(cur, suppressionAmount, sym);
 
     // Panel C — Conversion Headroom (potential at top-quartile <4 hr speed)
     const tqMultiplier  = getScenarioMultiplier(getBaseMultiplier(cur, Math.min(BENCHMARKS.topQuartile - 1, cur)), state.scenario);
@@ -1676,7 +1683,7 @@
     sectionHead('EVIDENCE BASIS', COL.blue);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...COL.mgray);
     const evLines = doc.splitTextToSize(
-      "The uplift thresholds reflect empirically observed step-changes in B2B conversion rates at key response-time boundaries. Harvard Business Review's analysis of 1.25 million sales leads found companies responding within one hour were 7\u00d7 more likely to qualify the lead than those responding an hour later. InsideSales.com research shows contact probability drops by 80% after 5 minutes. The threshold bonuses in this model are conservative proxies for those published step-changes in conversion probability.",
+      "The uplift thresholds reflect empirically observed step-changes in B2B conversion rates at key response-time boundaries. Harvard Business Review (Oldroyd et al., 2011, 'The Short Life of Online Sales Leads') — analysis of 1.25 million sales leads found businesses responding within one hour were 7\u00d7 more likely to qualify a lead than those responding an hour later. InsideSales.com / XANT Lead Response Study — contact probability drops by over 80% after just five minutes. Buyer Revolution / Demand Gen Report — B2B buyers now expect a substantive response within 3 hours; the majority choose the first vendor who responds. The threshold bonuses in this model are conservative proxies for those published step-changes.",
       CW - 6
     );
     doc.text(evLines, M + 3, y);
