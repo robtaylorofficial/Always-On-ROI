@@ -529,10 +529,16 @@
     }
     .diagnostic-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
     }
-    @media (max-width: 860px) { .diagnostic-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1000px) { .diagnostic-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px)  { .diagnostic-grid { grid-template-columns: 1fr; } }
+
+    /* Today card — red warning */
+    .opportunity-amount.loss { color: #c0392b; }
+    /* Divider line between the two middle cards */
+    .diag-panel + .diag-panel { border-left: none; }
 
     .speed-grade {
       font-size: 3.25rem;
@@ -973,12 +979,20 @@
         </div>
       </div>
 
-      <!-- Panel B: Revenue Suppression -->
+      <!-- Panel B1: Today's picture — revenue lost to slow response -->
       <div class="diag-panel">
-        <div class="output-label">Estimated additional monthly revenue</div>
-        <div class="opportunity-amount positive" id="diag-opportunity-cost">£0</div>
-        <div class="output-sub" id="diag-suppression-pct" style="margin:0.2rem 0 0.55rem;font-size:0.78rem;font-weight:700;color:var(--green)"></div>
-        <div class="opportunity-narrative" id="diag-opportunity-narrative"></div>
+        <div class="output-label">Revenue lost to slow response — today</div>
+        <div class="opportunity-amount loss" id="diag-today-loss">£0</div>
+        <div class="output-sub" id="diag-today-annual" style="margin:0.2rem 0 0.55rem;font-size:0.78rem;font-weight:700;color:#c0392b"></div>
+        <div class="opportunity-narrative" id="diag-today-narrative"></div>
+      </div>
+
+      <!-- Panel B2: Future picture — what improvements deliver -->
+      <div class="diag-panel">
+        <div class="output-label">Additional revenue — with your improvements</div>
+        <div class="opportunity-amount positive" id="diag-future-uplift">£0</div>
+        <div class="output-sub" id="diag-future-sub" style="margin:0.2rem 0 0.55rem;font-size:0.78rem;font-weight:700;color:var(--green)"></div>
+        <div class="opportunity-narrative" id="diag-future-narrative"></div>
       </div>
 
       <!-- Panel C: Conversion Headroom -->
@@ -1175,9 +1189,19 @@
     return { items, totalUplift, multiplier: 1 + totalUplift };
   }
 
-  function getOpportunityNarrative(cur, nw, total, speedPart, crPart, sym) {
+  // Panel B1: today's cost narrative
+  function getTodayNarrative(cur, loss, sym) {
+    if (loss <= 0)
+      return 'Your current response speed is already at or near top-quartile. No significant revenue is being lost to slower-than-benchmark response.';
+    const lossStr   = sym + Math.round(loss).toLocaleString('en-GB');
+    const annualStr = sym + Math.round(loss * 12).toLocaleString('en-GB');
+    return `At your current ${responseLabel(cur).toLowerCase()} response speed, an estimated ${lossStr}/month in conversion revenue is being lost vs top-quartile (\u003c3 hr) competitors — ${annualStr} annualised. This revenue exists in your pipeline today; faster competitors responding to the same enquiries are more likely to capture it.`;
+  }
+
+  // Panel B2: future improvements narrative
+  function getFutureNarrative(cur, nw, total, speedPart, crPart, sym) {
     if (total <= 0)
-      return 'No improvements are currently configured. Set a response time improvement and/or a conversion rate improvement above to see your estimated monthly revenue uplift.';
+      return 'Configure a response speed improvement and/or a conversion rate improvement above to model your projected monthly uplift.';
     const totalStr  = sym + Math.round(total).toLocaleString('en-GB');
     const annualStr = sym + Math.round(total * 12).toLocaleString('en-GB');
     const hasSpeed  = speedPart > 1;
@@ -1185,15 +1209,11 @@
     if (hasSpeed && hasCR) {
       const sStr = sym + Math.round(speedPart).toLocaleString('en-GB');
       const cStr = sym + Math.round(crPart).toLocaleString('en-GB');
-      return `Combining your ${fmtHrs(nw)} response speed improvement with your conversion rate uplift delivers an estimated ${totalStr}/month — ${annualStr} annualised. Of this, ${sStr}/month is attributable to faster response and ${cStr}/month to your conversion rate improvement. These two levers are independent and compound each other.`;
+      return `Your combined improvements deliver an estimated ${totalStr}/month — ${annualStr} annualised. ${sStr} comes from faster response, ${cStr} from conversion rate uplift. These two levers are independent and compound each other.`;
     }
-    if (hasSpeed) {
-      return `Improving response from ${fmtHrs(cur)} to ${fmtHrs(nw)} delivers an estimated ${totalStr}/month in additional conversion revenue — ${annualStr} annualised. Add a conversion rate improvement above to compound this with gains from better sales process or training.`;
-    }
-    if (hasCR) {
-      return `Your conversion rate improvement delivers an estimated ${totalStr}/month in additional revenue — ${annualStr} annualised. Add a response speed improvement to layer on the additional uplift that faster response generates — the two effects compound.`;
-    }
-    return `Your improvements deliver an estimated ${totalStr}/month — ${annualStr} annualised.`;
+    if (hasSpeed)
+      return `Improving response from ${fmtHrs(cur)} to ${fmtHrs(nw)} delivers an estimated ${totalStr}/month — ${annualStr} annualised. Add a conversion rate improvement above to compound this further.`;
+    return `Your conversion rate improvement delivers an estimated ${totalStr}/month — ${annualStr} annualised. Add a response speed improvement to compound this further.`;
   }
 
   function getCRNote(h, deltaCR) {
@@ -1293,35 +1313,41 @@
     document.getElementById('diag-verdict').textContent      = rating.verdictLine;
     document.getElementById('diag-position-val').textContent = fmtHrs(cur);
 
-    // Panel B — Total additional monthly revenue from all configured improvements.
-    // Goes UP as response speed improves. Goes UP as CR improves. Goes UP as pipeline grows.
-    // All of these are correct: more improvement = more uplift, bigger business = bigger absolute gain.
-    const speedOnlyUplift = Math.max(0, r.monthlyRevenue * (r.adjM - 1));
-    const crImprovUplift  = Math.max(0, r.monthlyUplift - speedOnlyUplift);
-    const totalUplift     = r.monthlyUplift;
+    // Panel B1 — TODAY'S PICTURE: revenue being lost right now vs top-quartile response speed
+    const tqRefHrs  = Math.min(BENCHMARKS.topQuartile - 1, cur);
+    const tqBaseM_B = getBaseMultiplier(cur, tqRefHrs);
+    const tqAdjM_B  = getScenarioMultiplier(tqBaseM_B, state.scenario);
+    const tqCR_cap  = Math.min(state.conversionRate * tqAdjM_B, 100);
+    const tqRevenue = r.monthlyEnquiries * (tqCR_cap / 100) * state.averageOrderValue;
+    const todayLoss = Math.max(0, tqRevenue - r.monthlyRevenue);
 
-    const costEl = document.getElementById('diag-opportunity-cost');
-    costEl.textContent = fmtCurrency(totalUplift);
-    costEl.classList.add('positive'); // always green — uplift is always a positive signal
+    document.getElementById('diag-today-loss').textContent = fmtCurrency(todayLoss);
+    document.getElementById('diag-today-annual').textContent = todayLoss > 0
+      ? fmtCurrency(todayLoss * 12) + ' annualised'
+      : 'Already at or near top-quartile speed';
+    document.getElementById('diag-today-narrative').textContent = getTodayNarrative(cur, todayLoss, sym);
 
-    const subEl = document.getElementById('diag-suppression-pct');
-    const hasSpeedImprovement = Math.abs(cur - nw) > 0.5;
-    const hasCRImprovement    = state.conversionRateImprovement > 0;
+    // Panel B2 — FUTURE PICTURE: what chosen improvements deliver
+    const speedOnlyUplift  = Math.max(0, r.monthlyRevenue * (r.adjM - 1));
+    const crImprovUplift   = Math.max(0, r.monthlyUplift - speedOnlyUplift);
+    const totalUplift      = r.monthlyUplift;
+    const hasSpeedImprove  = Math.abs(cur - nw) > 0.5;
+    const hasCRImprove     = state.conversionRateImprovement > 0;
+
+    document.getElementById('diag-future-uplift').textContent = fmtCurrency(totalUplift);
+    const futureSubEl = document.getElementById('diag-future-sub');
     if (totalUplift <= 0) {
-      subEl.textContent = 'Set a response improvement and/or conversion rate improvement above to see your monthly uplift';
-      subEl.style.color = 'var(--gray-500)';
-    } else if (hasSpeedImprovement && hasCRImprovement) {
-      subEl.textContent = `${fmtCurrency(speedOnlyUplift)}/month from response speed · ${fmtCurrency(crImprovUplift)}/month from conversion rate improvement`;
-      subEl.style.color = 'var(--green)';
-    } else if (hasSpeedImprovement) {
-      subEl.textContent = `Driven by response speed improvement — add a conversion rate improvement to compound this further`;
-      subEl.style.color = 'var(--green)';
+      futureSubEl.textContent = 'Set improvements above to see your projected uplift';
+      futureSubEl.style.color = 'var(--gray-500)';
+    } else if (hasSpeedImprove && hasCRImprove) {
+      futureSubEl.textContent = `${fmtCurrency(speedOnlyUplift)}/mo response speed · ${fmtCurrency(crImprovUplift)}/mo conversion rate`;
+      futureSubEl.style.color = 'var(--green)';
     } else {
-      subEl.textContent = `Driven by conversion rate improvement — add a response speed improvement to compound this further`;
-      subEl.style.color = 'var(--green)';
+      futureSubEl.textContent = fmtCurrency(totalUplift * 12) + ' annualised';
+      futureSubEl.style.color = 'var(--green)';
     }
-    document.getElementById('diag-opportunity-narrative').textContent =
-      getOpportunityNarrative(cur, nw, totalUplift, speedOnlyUplift, crImprovUplift, sym);
+    document.getElementById('diag-future-narrative').textContent =
+      getFutureNarrative(cur, nw, totalUplift, speedOnlyUplift, crImprovUplift, sym);
 
     // Panel C — Conversion Headroom (potential at top-quartile <4 hr speed)
     const tqMultiplier  = getScenarioMultiplier(getBaseMultiplier(cur, Math.min(BENCHMARKS.topQuartile - 1, cur)), state.scenario);
