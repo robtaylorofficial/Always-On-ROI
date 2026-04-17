@@ -1088,8 +1088,34 @@
     scenario:            'expected'
   };
 
-  const SETUP_COST   = 5000;
-  const MONTHLY_COST = 500;
+  // Base costs in GBP — converted to local currency at runtime
+  const SETUP_COST_GBP   = 5000;
+  const MONTHLY_COST_GBP = 500;
+
+  // Approximate exchange rates from GBP (updated periodically — indicative only)
+  const FX = {
+    GBP: 1.00, USD: 1.28, EUR: 1.18, AED: 4.70, AUD: 1.95,
+    BRL: 7.20, CAD: 1.75, CHF: 1.12, CNY: 9.20, CZK: 29.5,
+    DKK: 8.80, HKD: 9.95, HUF: 505,  IDR: 20500, INR: 107,
+    JPY: 193,  KRW: 1750, MXN: 22.0, MYR: 6.00, NOK: 13.7,
+    NZD: 2.10, PHP: 72.0, PLN: 5.10, SAR: 4.80, SEK: 13.5,
+    SGD: 1.72, THB: 44.0, TRY: 43.0, TWD: 41.0, ZAR: 23.0,
+  };
+
+  function convertFromGBP(gbpAmount, code) {
+    const raw = gbpAmount * (FX[code] || 1.0);
+    // Round to nearest natural unit: 100 for most, 1000 for large, 10000 for very large
+    const mag = raw >= 100000 ? 10000 : raw >= 10000 ? 1000 : 100;
+    return Math.round(raw / mag) * mag;
+  }
+
+  function getLocalCosts() {
+    const code = state.currency.code;
+    return {
+      setupCost:   convertFromGBP(SETUP_COST_GBP,   code),
+      monthlyCost: convertFromGBP(MONTHLY_COST_GBP, code),
+    };
+  }
 
   // ── DIAGNOSTIC CONSTANTS ──────────────────────────────────────
   const BENCHMARKS = { b2bAverage: 47, topQuartile: 4, bestInClass: 1 };
@@ -1249,16 +1275,17 @@
     const improvedRevenue   = improvedOrders * averageOrderValue;
     const monthlyUplift     = improvedRevenue - monthlyRevenue;
 
+    const { setupCost, monthlyCost } = getLocalCosts();
     const uplift6m          = monthlyUplift * 6;
     const uplift12m         = monthlyUplift * 12;
-    const cost6m            = SETUP_COST + MONTHLY_COST * 6;
-    const cost12m           = SETUP_COST + MONTHLY_COST * 12;
+    const cost6m            = setupCost + monthlyCost * 6;
+    const cost12m           = setupCost + monthlyCost * 12;
     const roi6m             = ((uplift6m  - cost6m)  / cost6m)  * 100;
     const roi12m            = ((uplift12m - cost12m) / cost12m) * 100;
-    const netMonthly        = monthlyUplift - MONTHLY_COST;
-    const payback           = netMonthly > 0 ? SETUP_COST / netMonthly : null;
+    const netMonthly        = monthlyUplift - monthlyCost;
+    const payback           = netMonthly > 0 ? setupCost / netMonthly : null;
 
-    return { monthlyEnquiries, monthlyRevenue, improvedRevenue, monthlyUplift, uplift6m, uplift12m, roi6m, roi12m, payback, newResponseTime, improvedCR, adjM };
+    return { monthlyEnquiries, monthlyRevenue, improvedRevenue, monthlyUplift, uplift6m, uplift12m, roi6m, roi12m, payback, newResponseTime, improvedCR, adjM, setupCost, monthlyCost };
   }
 
   // ── DOM UPDATES ───────────────────────────────────────────────
@@ -1293,9 +1320,8 @@
     setText('out-6m-roi',        fmtROI(r.roi6m));
     setText('out-12m-roi',       fmtROI(r.roi12m));
     setText('out-payback',       fmtPayback(r.payback));
-    const sym = state.currency.symbol;
     document.getElementById('out-payback-sub').textContent =
-      `time to recover ${sym}5,000 setup cost at net return above ${sym}500/month fee`;
+      `time to recover ${fmtCurrency(r.setupCost)} setup cost at net return above ${fmtCurrency(r.monthlyCost)}/month fee`;
     updateDiagnostics(r);
   }
 
@@ -1668,7 +1694,7 @@
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(7.5);
     doc.setTextColor(...COL.mgray);
-    doc.text('System cost basis: ' + state.currency.symbol + '5,000 setup + ' + state.currency.symbol + '500/month. ROI calculated against total system cost.', M + 3, y + 5);
+    doc.text('System cost basis: ' + fmtCurrency(r.setupCost) + ' setup + ' + fmtCurrency(r.monthlyCost) + '/month. ROI calculated against total system cost.', M + 3, y + 5);
     y += 14;
 
     // ── Disclaimer ──
