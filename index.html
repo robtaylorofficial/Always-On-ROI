@@ -933,7 +933,7 @@
         <div class="output-card yellow full">
           <div class="output-label">Estimated payback period</div>
           <div class="output-value" id="out-payback">2.3 months</div>
-          <div class="output-sub">time to recover £5,000 setup cost at net return above £500/month fee</div>
+          <div class="output-sub" id="out-payback-sub">time to recover £5,000 setup cost at net return above £500/month fee</div>
         </div>
 
       </div>
@@ -1293,6 +1293,9 @@
     setText('out-6m-roi',        fmtROI(r.roi6m));
     setText('out-12m-roi',       fmtROI(r.roi12m));
     setText('out-payback',       fmtPayback(r.payback));
+    const sym = state.currency.symbol;
+    document.getElementById('out-payback-sub').textContent =
+      `time to recover ${sym}5,000 setup cost at net return above ${sym}500/month fee`;
     updateDiagnostics(r);
   }
 
